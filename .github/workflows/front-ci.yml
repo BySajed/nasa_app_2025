@@ -9,6 +9,7 @@ on:
 env:
   VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
   VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -39,6 +40,7 @@ jobs:
         with:
           context: ./front
           push: true
+          secret-envs: VITE_MAPBOX_ACCESS_TOKEN=${{secrets.VITE_MAPBOX_ACCESS_TOKEN}}, VITE_API_URL=${{VITE_API_URL}}
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/expedition25:front
 
       - name: Redeploy
