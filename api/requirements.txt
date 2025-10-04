@@ -4,3 +4,6 @@ astroquery
 requests
 python-dotenv
 jplephem
+sqlmodel
+passlib
+python-jose[cryptography]
