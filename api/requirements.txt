@@ -1,3 +1,4 @@
+starlette
 apscheduler
 astropy
 skyfield
@@ -8,3 +9,7 @@ pydantic-settings
 pydantic
 fastapi[standard]
 redis>=5.0.0
+astropy
+astroquery
+requests
+python-dotenv

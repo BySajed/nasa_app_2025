@@ -3,6 +3,10 @@ services:
     image: dixennaxos/expedition25:api
     ports:
       - "8000:8000"
+    environment:
+      - RAPIDAPI_KEY=${RAPIDAPI_KEY}
+    env_file:
+      - ./api/.env
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.expedition25-api.rule=Host(`expedition25-api.dixen.fr`)"

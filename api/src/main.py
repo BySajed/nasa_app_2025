@@ -2,8 +2,9 @@ import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
+from starlette.middleware.cors import CORSMiddleware
 
-from .routers import sky, objects
+from .routers import sky, objects, weather, moon
 from .services.artificial.tle_cache import ensure_tle_cache
 from .dependencies.settings import settings
 
@@ -35,6 +36,15 @@ async def lifespan(app: FastAPI):
             logger.info("Scheduler shut down.")
 
 app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+)
+
+app.include_router(weather.router)
+
+app.include_router(moon.router)
 app.include_router(sky.router)
 app.include_router(objects.router)
 
