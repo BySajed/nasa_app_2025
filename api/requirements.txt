@@ -1,1 +1,10 @@
+apscheduler
+astropy
+skyfield
+numpy
+httpx
+booktype
+pydantic-settings
+pydantic
 fastapi[standard]
+redis>=5.0.0
