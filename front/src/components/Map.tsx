@@ -12,27 +12,8 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
 
-    async function fetchGeoJsonData(city: string) {
-        const query = `
-        [out:json];
-        relation
-          ["name"="${city}"]
-          ["boundary"="administrative"]
-          ["type"="boundary"]
-          ["admin_level"~"^(6|8)$"];
-        out geom;
-    `;
-        const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(query)}`;
-
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    }
-
     async function fetchCityGpsCoordinates(city: string) {
-        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?access_token=${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`)
+        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?access_token=${MAPBOX_ACCESS_TOKEN}`)
         if (!response.ok) {
             throw new Error('Network response was not ok');
         }
@@ -50,7 +31,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         mapRef.current = new mapboxgl.Map({
             container: mapContainerRef.current as HTMLDivElement,
             center: [2.3522, 48.8566],
-            zoom: 12
+            zoom: 2.5,
         });
     }, []);
 
@@ -59,6 +40,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         if (!selectedCity || !mapRef.current) return;
 
         fetchCityGpsCoordinates(selectedCity).then((coordinates) => {
+            console.log(coordinates);
             mapRef.current?.flyTo({
                 center: coordinates,
                 zoom: 12.5,
@@ -85,4 +67,4 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     );
 };
 
-export default Map;*/
+export default Map;

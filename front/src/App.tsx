@@ -1,5 +1,5 @@
 import './App.css'
-/*import Map from './components/Map';*/
+import Map from './components/Map';
 import SearchBar from './components/SearchBar';
 import { useState } from 'react';
 function App() {
@@ -14,7 +14,7 @@ function App() {
         </div>
       </div>
       <div className=" w-full h-full col-span-2 ">
-        {/* <Map selectedCity={selectedVille} /> */}
+        <Map selectedCity={selectedVille} />
       </div>
     </div>
   )
