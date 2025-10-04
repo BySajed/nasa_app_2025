@@ -3,41 +3,12 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { MapProps } from "../interfaces/IMap";
 import pinUrl from "../assets/marker.svg";
+import {navigateToSky} from "../lib/nav.ts";
+import {forwardGeocode, reverseGeocode} from "../lib/geocoding.ts";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
-function navigateToSky(lng: number, lat: number) {
-    const params = new URLSearchParams({ lnt: String(lat), lgt: String(lng) });
-    window.location.assign(`/sky?${params.toString()}`);
-}
 
-async function forwardGeocode(query: string): Promise<[number, number] | null> {
-    if (!TOKEN) return null;
-    const url =
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
-        new URLSearchParams({ access_token: TOKEN, language: "fr", limit: "1" });
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    return data?.features?.[0]?.geometry?.coordinates ?? null;
-}
-
-async function reverseGeocode(lng: number, lat: number): Promise<string | null> {
-    if (!TOKEN) return null;
-    const url =
-        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?` +
-        new URLSearchParams({
-            access_token: TOKEN,
-            language: "fr",
-            types: "address,place,locality,neighborhood,poi",
-            limit: "1",
-        });
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const f = data?.features?.[0];
-    return f?.properties?.place_formatted || f?.place_name || null;
-}
 
 function createMarkerElement(): HTMLElement {
     const el = document.createElement("div");

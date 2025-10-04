@@ -1,13 +1,5 @@
 import { useState, useEffect } from 'react'
-
-export type Position = {
-  id: string
-  lat: number
-  lng: number
-  timestamp: string
-  title?: string
-  description?: string
-}
+import type {Position} from "../interfaces/IPosition.ts";
 
 const STORAGE_KEY = 'position_history'
 const MAX_HISTORY = 5
@@ -15,7 +7,6 @@ const MAX_HISTORY = 5
 export function usePositionHistory() {
   const [positions, setPositions] = useState<Position[]>([])
 
-  // Charger l'historique au montage
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
