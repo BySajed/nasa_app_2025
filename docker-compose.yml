@@ -1,0 +1,28 @@
+services:
+  exosky-api:
+    image: dixennaxos/expedition25:api
+    ports:
+      - "8000:8000"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.expedition25-api.rule=Host(`expedition25-api.dixen.fr`)"
+      - "traefik.http.routers.expedition25-api.entrypoints=websecure"
+      - "traefik.http.routers.expedition25-api.tls.certresolver=myresolver"
+    networks:
+      - traefik
+
+  exosky-front:
+    image: dixennaxos/expedition25:front
+    ports:
+      - "8001:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.expedition25-front.rule=Host(`expedition25.dixen.fr`)"
+      - "traefik.http.routers.expedition25-front.entrypoints=websecure"
+      - "traefik.http.routers.expedition25-front.tls.certresolver=myresolver"
+    networks:
+      - traefik
+
+networks:
+  traefik:
+    external: true
