@@ -35,7 +35,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ setCity }) => {
                             required
                             autoFocus
                             className="w-full h-full px-4 text-neutral focus:outline-none"
-                            placeholder="Rechercher votre adresse"
+                            placeholder="Search your city or address..."
                             value={currentSearch}
                             onChange={(e) => setCurrentSearch(e.target.value)}
                             autoComplete="street-address"
@@ -45,7 +45,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ setCity }) => {
 
                     {currentSearch && (
                         <button type="submit" className="btn btn-secondary cursor-pointer">
-                            Valider
+                            Search
                         </button>
                     )}
                 </form>
