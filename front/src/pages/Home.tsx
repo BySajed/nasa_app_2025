@@ -12,6 +12,7 @@ function Home() {
     const navigateToSky = useNavigateToSky();
 
     function handleClick(pos: Position) {
+        console.log(pos);
         navigateToSky(pos.lng, pos.lat);
     }
 
@@ -20,13 +21,16 @@ function Home() {
             <div className="flex flex-col items-center p-4">
                 <SearchBar searchCity={true} setCity={setSelectedVille} />
                 <div className="flex flex-col gap-4 my-4 w-full">
-                    {positions.map((pos) => (
-                        <CardHistoryPosition key={pos.id} {...pos} onClick={() => handleClick(pos)} />
-                    ))}
+                    <ul className="flex flex-col gap-2 overflow-y-hidden">
+                        {positions.map((pos) => (
+                            <CardHistoryPosition key={pos.id} {...pos} onClick={() => handleClick(pos)} />
+                        ))}
+
+                    </ul>
                 </div>
             </div>
 
-            <div className="w-full h-full col-span-2">
+            <div className="w-full h-full col-span-2 overflow-hidden">
                 <Map selectedCity={selectedVille} />
             </div>
         </div>
