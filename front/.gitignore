@@ -9,6 +9,7 @@ lerna-debug.log*
 .env
 **/.idea/
 
+pnpm-lock.yaml
 # Env
 **/.env
 **/.env.*
