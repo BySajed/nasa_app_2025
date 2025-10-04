@@ -5,7 +5,7 @@ export async function getVisibleStars(
   lat: number
 ): Promise<Star[]> {
   const res = await apiClient
-    .get<{ stars: Star[] }>("/sky/stars", {
+    .get<{ stars: Star[] }>("sky/stars", {
       searchParams: { lat, lon },
     })
     .json();

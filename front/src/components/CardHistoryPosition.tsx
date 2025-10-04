@@ -14,13 +14,13 @@ const CardHistoryPosition: React.FC<CardHistoryPositionProps> = (pos) => (
                 {pos.title || `Position ${pos.id.slice(0, 8)}`}
             </h3>
             <p className="text-xs opacity-70">
-                {pos.description || 'Position visitée'}
+                {pos.description || 'Position visited previously'}
             </p>
             <div className="text-xs font-mono opacity-60">
                 {pos.lat.toFixed(5)}, {pos.lng.toFixed(5)}
             </div>
             <div className="text-xs opacity-50">
-                {new Date(pos.timestamp).toLocaleString('fr-FR')}
+                {new Date(pos.timestamp).toLocaleString()}
             </div>
         </div>
     </div>

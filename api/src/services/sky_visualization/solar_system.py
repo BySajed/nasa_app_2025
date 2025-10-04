@@ -21,6 +21,7 @@ MAG = {
     "pluto": -1.0,
 }
 
+
 @lru_cache(maxsize=8)
 def get_solar_system_positions(
     lat: float, lon: float, height: float = 0, time: datetime = None
@@ -73,7 +74,8 @@ def _get_planet_position(
 
         magnitude = _calculate_planet_magnitude(body_name, body_coord, time)
 
-        enu_coords = alt_az_to_enu(altaz.alt.deg, altaz.az.deg, distance_km)
+        scaled_distance_km = distance_km / 100000
+        enu_coords = alt_az_to_enu(altaz.alt.deg, altaz.az.deg, scaled_distance_km)
 
         return {
             "name": body_name.capitalize(),
@@ -83,6 +85,7 @@ def _get_planet_position(
             "y": float(enu_coords[1]),
             "z": float(enu_coords[2]),
             "distance_km": float(distance_km),
+            "scaled_distance_km": float(scaled_distance_km),
             "magnitude": float(magnitude),
             "is_visible": bool(altaz.alt.deg > 0),
         }
@@ -117,6 +120,7 @@ def _calculate_moon_magnitude(body_coord: SkyCoord, time: astropy.time.Time) -> 
     mag_variation = 2.5 * np.log10((distance_km / avg_distance) ** 2)
 
     return full_moon_mag + mag_variation
+
 
 def _calculate_magnitude(body_name: str, distance_au: float) -> float:
     abs_mag = MAG.get(body_name, 0.0)
