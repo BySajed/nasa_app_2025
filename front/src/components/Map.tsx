@@ -98,8 +98,9 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     function attachMarkerPopup(lng: number, lat: number, address?: string | null) {
         if (!markerRef.current) return;
         const btn = document.createElement("button");
-        btn.className = "btn btn-secondary";
+        btn.className = "btn btn-primary text-neutral font-semibold px-4 py-2 rounded-md";
         btn.textContent = "Voir le ciel ici";
+
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
@@ -107,9 +108,12 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         };
 
         const wrapper = document.createElement("div");
+        wrapper.style.display = "flex";
+        wrapper.style.flexDirection = "column";
+        wrapper.style.alignItems = "center";
         if (address) {
             const p = document.createElement("p");
-            p.style.marginBottom = "8px";
+            p.className = "text-neutral font-semibold mb-2 align-center";
             p.textContent = address;
             wrapper.appendChild(p);
         }
