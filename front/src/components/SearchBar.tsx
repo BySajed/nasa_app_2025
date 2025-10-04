@@ -1,8 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { AddressAutofill } from "@mapbox/search-js-react";
 import type { SearchBarProps } from "../interfaces/IMap";
 import searchLogo from "../assets/search.svg";
+import AddressAutofillCompat from "./AddressAutofillCompat.tsx";
 
 const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
@@ -27,7 +27,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ setCity }) => {
 
             <div className="w-full">
                 <form onSubmit={handleSubmit} className="flex items-center justify-between w-full">
-                    <AddressAutofill
+                    <AddressAutofillCompat
                         accessToken={MAPBOX_ACCESS_TOKEN!}
                     >
                         <input
@@ -35,17 +35,17 @@ const SearchBar: React.FC<SearchBarProps> = ({ setCity }) => {
                             required
                             autoFocus
                             className="w-full h-full px-4 text-neutral focus:outline-none"
-                            placeholder="Rechercher votre adresse"
+                            placeholder="Search your city or address..."
                             value={currentSearch}
                             onChange={(e) => setCurrentSearch(e.target.value)}
                             autoComplete="street-address"
                             name="address-line1"
                         />
-                    </AddressAutofill>
+                    </AddressAutofillCompat>
 
                     {currentSearch && (
                         <button type="submit" className="btn btn-secondary cursor-pointer">
-                            Valider
+                            Search
                         </button>
                     )}
                 </form>
