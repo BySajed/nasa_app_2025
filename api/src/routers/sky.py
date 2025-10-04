@@ -1,14 +1,19 @@
+from datetime import datetime
+from typing import Optional
+
 from fastapi import APIRouter, HTTPException, Query
 from ..dependencies.settings import settings
 from ..decorators.timing import timed
 from ..services.artificial.tle_cache import ensure_tle_cache
 from ..services.artificial.propagator_sgp4 import compute_above
 from ..models.responses import AboveResponse
+from ..services.sky_visualization.solar_system import get_solar_system_positions
+from ..services.sky_visualization.stars import get_visible_stars
 
 router = APIRouter(prefix="/sky", tags=["sky"])
 
-@router.get("/above", response_model=AboveResponse)
-@timed("sky_above")
+@router.get("/satellite", response_model=AboveResponse)
+@timed("sky_satellite")
 async def sky_above(
     lat: float = Query(..., ge=-90, le=90),
     lon: float = Query(..., ge=-180, le=180),
@@ -35,3 +40,21 @@ async def sky_above(
         track_step_s=trackStepSec
     )
     return data
+
+@router.get("/stars")
+def get_stars(lat: float, lon: float, height: float = 0, time: Optional[str] = None):
+
+    if time:
+        time = datetime.fromisoformat(time)
+    else:
+        time = datetime.now()
+
+    stars = get_visible_stars(lat, lon, height, time)
+    return {"stars": stars}
+
+
+@router.get("/solar-system")
+def get_solar_system(lat: float, lon: float):
+    time = datetime.now()
+    planets = get_solar_system_positions(lat, lon, 0, time)
+    return {"planets": planets}

@@ -43,7 +43,6 @@ app.add_middleware(
 )
 
 app.include_router(weather.router)
-
 app.include_router(moon.router)
 app.include_router(sky.router)
 app.include_router(objects.router)

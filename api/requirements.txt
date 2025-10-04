@@ -13,3 +13,4 @@ astropy
 astroquery
 requests
 python-dotenv
+jplephem

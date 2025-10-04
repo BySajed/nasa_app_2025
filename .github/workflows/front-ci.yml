@@ -28,6 +28,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
+      - name: Create .env file
+        run: |
+          touch ./front/.env
+          echo "${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}" >> ./front/.env
+          echo "${{ secrets.VITE_API_URL }}" >> ./front/.env
+
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
