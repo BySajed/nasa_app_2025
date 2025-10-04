@@ -1,7 +1,9 @@
 from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional
-from src.models.spot import Spot
-from src.models.user import User
+from typing import Optional, TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .spot import Spot
+    from .user import User
 
 
 class Review(SQLModel, table=True):
@@ -10,5 +12,5 @@ class Review(SQLModel, table=True):
     comment: str
     spot_id: int = Field(foreign_key="spot.id")
     user_id: int = Field(foreign_key="user.id")
-    spot: Optional[Spot] = Relationship(back_populates="reviews")
-    user: Optional[User] = Relationship(back_populates="reviews")
+    spot: Optional["Spot"] = Relationship(back_populates="reviews")
+    user: Optional["User"] = Relationship(back_populates="reviews")

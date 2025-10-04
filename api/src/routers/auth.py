@@ -1,6 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.services.database import get_session
-from src.services.auth import oauth2_scheme, decode_token
 from src.services.auth import get_password_hash, verify_password, create_access_token
 from src.schemas.user_create import UserCreate
 from src.schemas.user_login import UserLogin
@@ -9,18 +8,6 @@ from sqlmodel import Session, select
 
 
 auth_router = APIRouter(prefix="/auth")
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme), session: Session = Depends(get_session)
-):
-    payload = decode_token(token)
-    user_id = payload.get("sub")
-    user = session.get(User, int(user_id))
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
-
 
 @auth_router.post("/signup")
 def signup(user: UserCreate, session: Session = Depends(get_session)):
