@@ -19,12 +19,8 @@
 }
 
 @keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -33,10 +29,21 @@
   }
 }
 
-.card {
-  padding: 2em;
+.card { padding: 2em; }
+
+.read-the-docs { color: #888; }
+
+.drawer-content { position: relative; }
+
+.fab-btn {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 60;
+  transition: transform 300ms ease-in-out;
 }
 
-.read-the-docs {
-  color: #888;
+.drawer:not(.drawer-end) .drawer-toggle:checked ~ .drawer-content .fab-btn {
+  transform: translateX(20rem);
 }
+
