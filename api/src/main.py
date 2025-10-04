@@ -30,6 +30,8 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("Database initialized.")
+        init_db()
+        logger.info("Database initialized.")
         yield
     finally:
         # Shutdown logic
@@ -38,14 +40,16 @@ async def lifespan(app: FastAPI):
             logger.info("Scheduler shut down.")
     yield
 
+app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
 
 origins = ["http://localhost:5174", "https://expedition25.dixen.fr"]
 
-app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
-
-
 app.add_middleware(
     CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],

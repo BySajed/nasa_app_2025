@@ -10,10 +10,10 @@ from src.models.user import User
 from sqlmodel import Session, select
 from sqlalchemy.orm import selectinload
 
-spots_router = APIRouter(prefix="/spots")
+router = APIRouter(prefix="/spots", tags=["spots"])
 
 
-@spots_router.post("/")
+@router.post("/")
 def create_spot(
     spot: SpotCreate,
     user: User = Depends(get_current_user),
@@ -34,13 +34,13 @@ def create_spot(
     return new_spot
 
 
-@spots_router.get("/", response_model=List[SpotRead])
+@router.get("/", response_model=List[SpotRead])
 def list_spots(session: Session = Depends(get_session)):
     spots = session.exec(select(Spot).options(selectinload(Spot.reviews))).all()
     return spots
 
 
-@spots_router.post("/reviews")
+@router.post("/reviews")
 def create_review(
     review: ReviewCreate,
     user: User = Depends(get_current_user),
