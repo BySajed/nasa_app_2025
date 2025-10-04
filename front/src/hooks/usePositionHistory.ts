@@ -56,6 +56,8 @@ export function usePositionHistory() {
     });
   }, []);
 
+  const removeLastElement = () => setPositions(prev => prev.slice(0, -1));
+
   const clearHistory = () => {
     setPositions([])
     localStorage.removeItem(STORAGE_KEY)
@@ -65,6 +67,7 @@ export function usePositionHistory() {
     positions,
     addPosition,
     clearHistory,
-    addMany
+    addMany,
+    removeLastElement
   }
 }

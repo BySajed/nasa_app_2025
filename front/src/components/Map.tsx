@@ -3,12 +3,10 @@ import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { MapProps } from "../interfaces/IMap";
 import pinUrl from "../assets/marker.svg";
-import {navigateToSky} from "../lib/nav.ts";
-import {forwardGeocode, reverseGeocode} from "../lib/geocoding.ts";
+import { forwardGeocode, reverseGeocode } from "../lib/geocoding";
+import { useNavigateToSky} from "../hooks/useNavigateToSky.ts";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
-
-
 
 function createMarkerElement(): HTMLElement {
     const el = document.createElement("div");
@@ -39,6 +37,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const markerRef = useRef<mapboxgl.Marker | null>(null);
+    const navigateToSky = useNavigateToSky();
 
     function ensureMarker(lng: number, lat: number) {
         if (!mapRef.current) return;
@@ -58,11 +57,12 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         map.stop();
 
         if (isCameraClose(map, lng, lat, zoom)) {
-            navigateToSky(lng, lat);
+            // ⚠️ le hook attend (lat, lng)
+            navigateToSky(lat, lng);
             return;
         }
 
-        map.once("moveend", () => navigateToSky(lng, lat));
+        map.once("moveend", () => navigateToSky(lat, lng)); // ⚠️ ordre corrigé
         map.flyTo({ center: [lng, lat], zoom, speed: 0.8, curve: 1.4, duration: 1200, essential: true });
     }
 
@@ -71,7 +71,6 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         const btn = document.createElement("button");
         btn.className = "btn btn-primary text-neutral font-semibold px-4 py-2 rounded-md";
         btn.textContent = "Voir le ciel ici";
-
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();

@@ -6,7 +6,7 @@ interface CardHistoryPositionProps extends Position {
 }
 
 const CardHistoryPosition: React.FC<CardHistoryPositionProps> = (pos) => (
-    <div className="card bg-base-100 shadow-sm cursor-pointer" onClick={pos.onClick}>
+    <div className="card bg-base-100 shadow-sm cursor-pointer border border-transparent hover:border hover:border-secondary transition-all duration-150">
         <div className="card-body p-3">
             <h3 className="card-title text-sm">
                 {pos.title || `Position ${pos.id.slice(0, 8)}`}
