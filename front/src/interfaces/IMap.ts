@@ -3,3 +3,6 @@ export interface SearchBarProps {
     setCity?: (city: string) => void;
 }
 
+export interface MapProps {
+    selectedCity: string | null
+}
