@@ -5,39 +5,45 @@ import {
   useThree,
   type ThreeElements,
 } from "@react-three/fiber";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { baseRotation, updateCameraRotation, useDrag } from "./useDrag";
+import type { Star } from "../../api/sky";
 
-export function Sky() {
+export function Sky({ stars }: { stars: Star[] }) {
   const [rotation, setRotation] = useState(baseRotation);
   function onDrag(dx: number, dy: number) {
-    console.log("lala", dx, dy);
     setRotation((prev) => updateCameraRotation(prev, dx, dy));
   }
 
-  useEffect(() => {
-    console.log("rotation", rotation);
-  }, [rotation]);
-
   const canvasProps = useDrag(onDrag);
   return (
-    <Canvas
-      {...canvasProps}
-      scene={{
-        background: new THREE.Color(0x000000),
-      }}
-      camera={{
-        isPerspectiveCamera: true,
-        rotation,
-        position: [0, 0, 0],
-      }}
-    >
-      <CameraController rotation={rotation} />
-      <ambientLight />
-      <pointLight position={[10, 10, 10]} />
-      <Star position={[-2, -2, 5]} />
-      <Star position={[2, 2, 5]} />
-    </Canvas>
+    <div className="w-screen h-screen">
+      <Canvas
+        {...canvasProps}
+        scene={{
+          background: new THREE.Color(0x000000),
+        }}
+        camera={{
+          isPerspectiveCamera: true,
+          rotation,
+          position: [0, 0, 0],
+        }}
+      >
+        <CameraController rotation={rotation} />
+        <ambientLight />
+        <pointLight position={[10, 10, 10]} />
+        {stars.map((star, i) => (
+          <Star
+            key={i}
+            position={scalePosition([star.x, star.y, star.z])}
+            onClick={() => {
+              console.log(star);
+            }}
+            size={sizeFromMagnitude(star.magnitude)}
+          />
+        ))}
+      </Canvas>
+    </div>
   );
 }
 
@@ -53,11 +59,24 @@ function CameraController({
   return null;
 }
 
-function Star(props: ThreeElements["mesh"]) {
+function Star(props: ThreeElements["mesh"] & { size: number }) {
   return (
     <mesh {...props}>
-      <sphereGeometry args={[0.5, 32, 32]} />
-      <meshStandardMaterial color={"orange"} />
+      <sphereGeometry args={[props.size, 32, 32]} />
+      <meshStandardMaterial color={"white"} />
     </mesh>
   );
+}
+
+function scalePosition([x, y, z]: [number, number, number]): [
+  number,
+  number,
+  number
+] {
+  return [x / 1000, y / 1000, z / 1000];
+}
+
+function sizeFromMagnitude(magnitude: number): number {
+  const lighting = Math.pow(2.512, -magnitude) * 20;
+  return lighting
 }
