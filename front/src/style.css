@@ -1,2 +1,12 @@
 @import "tailwindcss";
-@plugin "daisyui";
+@plugin "daisyui" {
+    themes: night --default, dark --prefersdark, sunset;
+}
+
+.mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+    display: none;
+}
+
+mapbox-address-autofill {
+    width: 100%;
+}
