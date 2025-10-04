@@ -9,6 +9,7 @@ from functools import lru_cache
 from datetime import datetime
 import json
 from src.services.sky_visualization.coordinates import alt_az_to_enu
+from typing import Any
 
 
 @lru_cache(maxsize=8)
@@ -25,7 +26,7 @@ def _map_row_to_star(row: astropy.table.Row) -> "Star":
         source_id=int(row['source_id']),
         ra=float(row['ra']),
         dec=float(row['dec']),
-        parallax=float(row['parallax']),
+        parallax=float(row['parallax']) if row['parallax'] != np.nan else None,
         magnitude=float(row['phot_g_mean_mag']),
         radius=float(row['radius_val']) if row['radius_val'] != np.nan else None,
     )
@@ -64,7 +65,7 @@ def parsec_to_solar_radius(parsec: float) -> float:
 class Star:
     DISTANCE_FROM_EARTH = 400_000  # in kms, arbitrary distance so that they are always further than close objects like satellites
 
-    def __init__(self, source_id: int, ra: float, dec: float, parallax: float, magnitude: float, radius: float | None):
+    def __init__(self, source_id: int, ra: float, dec: float, parallax: float | None, magnitude: float, radius: float | None):
         self.source_id = source_id
         self.ra = ra
         self.dec = dec
@@ -74,6 +75,7 @@ class Star:
 
     def to_visualizable_dict(self, location: EarthLocation, time: astropy.time.Time) -> dict:
         enu_coords = self.to_ENU(location, time)
+
         return {
             "source_id": self.source_id,
             "magnitude": self.magnitude,
@@ -89,12 +91,12 @@ class Star:
         return alt_az_to_enu(altaz.alt.deg, altaz.az.deg, Star.DISTANCE_FROM_EARTH)
 
     @property
-    def earth_dist_pc(self) -> float:
-        return 1000.0 / self.parallax
+    def earth_dist_pc(self) -> float | None:
+        return 1000.0 / self.parallax if self.parallax and self.parallax != 0 else None
 
     @property
-    def earth_dist_light_years(self) -> float:
-        return u.Quantity(self.earth_dist_pc, u.pc).to(u.lyr).value
+    def earth_dist_light_years(self) -> float | None:
+        return u.Quantity(self.earth_dist_pc, u.pc).to(u.lyr).value if self.earth_dist_pc else None
 
 
 if __name__ == "__main__":
