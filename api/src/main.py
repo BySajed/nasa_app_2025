@@ -15,14 +15,33 @@ scheduler = AsyncIOScheduler()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    init_db()
+    # Startup logic
+    await ensure_tle_cache()
+    # Use a fixed job id to avoid duplicate jobs on auto-reload (e.g. uvicorn --reload)
+    scheduler.add_job(
+        ensure_tle_cache,
+        "interval",
+        id="refresh_tle",
+        hours=settings.TLE_REFRESH_HOURS,
+        replace_existing=True,
+    )
+    scheduler.start()
+    logger.info("API started, TLE cache initialized and scheduler running.")
+    try:
+        init_db()
+        logger.info("Database initialized.")
+        yield
+    finally:
+        # Shutdown logic
+        if scheduler.running:
+            scheduler.shutdown(wait=False)
+            logger.info("Scheduler shut down.")
     yield
 
 
 origins = ["http://localhost:5174", "https://expedition25.dixen.fr"]
 
-
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
 
 
 app.add_middleware(
