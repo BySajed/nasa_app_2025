@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.services.database import get_session
-from src.services.auth import get_password_hash, verify_password, create_access_token
+from src.services.auth import get_password_hash, verify_password, create_access_token, get_current_user
 from src.schemas.user_create import UserCreate
 from src.schemas.user_login import UserLogin
 from src.models.user import User
@@ -27,3 +27,8 @@ def login(user: UserLogin, session: Session = Depends(get_session)):
         raise HTTPException(status_code=400, detail="Invalid credentials")
     token = create_access_token({"sub": str(db_user.id)})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@auth_router.get("/me")
+def me(user: User = Depends(get_current_user)):
+    return user
