@@ -7,7 +7,8 @@ RUN corepack enable
 # Set working directory
 WORKDIR /app
 
-COPY .env ./.env
+RUN ls
+COPY .env ./
 # Copy dependency files first (for better caching)
 COPY package.json pnpm-lock.yaml ./
 
