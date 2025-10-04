@@ -1,6 +1,7 @@
 name: Front CI
 
 on:
+  workflow_dispatch:
   push:
     branches: [ "main", "ci" ]
     paths: ["front/**"]
