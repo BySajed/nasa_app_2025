@@ -5,6 +5,7 @@ import type { MapProps } from "../interfaces/IMap";
 import pinUrl from "../assets/marker.svg";
 import { forwardGeocode, reverseGeocode } from "../lib/geocoding";
 import { useNavigateToSky} from "../hooks/useNavigateToSky.ts";
+import {usePositionHistory} from "../hooks/usePositionHistory.ts";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
@@ -38,6 +39,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const markerRef = useRef<mapboxgl.Marker | null>(null);
     const navigateToSky = useNavigateToSky();
+    const {addPosition} = usePositionHistory();
 
     function ensureMarker(lng: number, lat: number) {
         if (!mapRef.current) return;
@@ -55,14 +57,14 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         if (!map) return;
 
         map.stop();
+        addPosition(lat, lng, selectedCity || undefined, undefined);
 
         if (isCameraClose(map, lng, lat, zoom)) {
-            // ⚠️ le hook attend (lat, lng)
             navigateToSky(lat, lng);
             return;
         }
 
-        map.once("moveend", () => navigateToSky(lat, lng)); // ⚠️ ordre corrigé
+        map.once("moveend", () => navigateToSky(lat, lng));
         map.flyTo({ center: [lng, lat], zoom, speed: 0.8, curve: 1.4, duration: 1200, essential: true });
     }
 
