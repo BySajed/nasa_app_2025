@@ -4,8 +4,10 @@ on:
   workflow_dispatch:
   push:
     branches: [ "main", "ci" ]
-    paths: ["front/**"]
+    paths: [ "front/**" ]
 
+env:
+  VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
 jobs:
   build:
     runs-on: ubuntu-latest
