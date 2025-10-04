@@ -12,7 +12,9 @@
   "dependencies": {
     "@tailwindcss/vite": "^4.1.14",
     "daisyui": "^5.1.27",
+    "mapbox-gl": "^3.15.0",
     "react": "^19.1.1",
+    "@mapbox/search-js-react": "^1.1.0",
     "react-dom": "^19.1.1",
     "tailwindcss": "^4.1.14"
   },
