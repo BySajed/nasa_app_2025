@@ -5,5 +5,5 @@ moon_router = APIRouter(prefix="/moon", tags=["moon"])
 
 
 @moon_router.get("/")
-async def get_moon(latitude: float, longitude: float):
-    return await MoonService.get_moon_info(latitude, longitude)
+async def get_moon(lat: float, lon: float):
+    return await MoonService.get_moon_info(lat, lon)

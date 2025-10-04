@@ -7,16 +7,17 @@ class MoonService:
     base_url = "https://moon-phase.p.rapidapi.com"
 
     @staticmethod
-    def get_url(latitude: float, longitude: float) -> str:
-        return f"{MoonService.base_url}?lat={latitude}&lon={longitude}"
+    def get_advanced_url(lat: float, lon: float) -> str:
+        return f"{MoonService.base_url}/advanced?lat={lat}&lon={lon}"
 
     @staticmethod
-    async def get_moon_info(latitude: float, longitude: float):
-        latitude = round(latitude, 1)
-        longitude = round(longitude, 1)
+    async def get_moon_info(lat: float, lon: float):
+        lat = round(lat, 1)
+        lon = round(lon, 1)
+        print(os.getenv("RAPIDAPI_KEY"))
 
         res = requests.get(
-            MoonService.get_url(latitude, longitude),
+            MoonService.get_advanced_url(lat, lon),
             headers={
                 "X-RapidAPI-Key": os.getenv("RAPIDAPI_KEY"),
                 "X-RapidAPI-Host": "moon-phase.p.rapidapi.com",
@@ -30,24 +31,30 @@ class MoonService:
             data["datestamp"] = datetime.fromtimestamp(data["timestamp"]).strftime(
                 "%a, %d %b %Y %H:%M:%S"
             )
-
             # Update sun timestamps
-            data["sun"]["sunrise_timestamp"] = datetime.fromtimestamp(
-                data["sun"]["sunrise"]
+            temp = data["sun"]["sunrise"]
+            data["sun"]["sunrise"] = datetime.fromtimestamp(
+                temp
             ).strftime("%H:%M")
-            data["sun"]["sunset_timestamp"] = datetime.fromtimestamp(
-                data["sun"]["sunset"]
+            data["sun"]["sunrise_timestamp"] = temp
+            
+            temp = data["sun"]["sunset"]
+            # Update sun timestamps
+            data["sun"]["sunset"] = datetime.fromtimestamp(
+                temp
             ).strftime("%H:%M")
+            data["sun"]["sunset_timestamp"] = temp
+            
             data["sun"]["next_solar_eclipse"]["datestamp"] = datetime.fromtimestamp(
                 data["sun"]["next_solar_eclipse"]["timestamp"]
             ).strftime("%a, %d %b %Y %H:%M:%S")
 
             # Update moon timestamps
-            data["moon"]["moonrise_timestamp"] = datetime.fromtimestamp(
-                data["moon"]["moonrise"]
+            data["moon"]["moonrise"] = datetime.fromtimestamp(
+                data["moon"]["moonrise_timestamp"]
             ).strftime("%H:%M")
-            data["moon"]["moonset_timestamp"] = datetime.fromtimestamp(
-                data["moon"]["moonset"]
+            data["moon"]["moonset"] = datetime.fromtimestamp(
+                data["moon"]["moonset_timestamp"]
             ).strftime("%H:%M")
             data["moon"]["next_lunar_eclipse"]["datestamp"] = datetime.fromtimestamp(
                 data["moon"]["next_lunar_eclipse"]["timestamp"]
