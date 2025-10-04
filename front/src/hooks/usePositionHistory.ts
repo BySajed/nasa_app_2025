@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import {useState, useEffect, useCallback} from 'react'
 import type {Position} from "../interfaces/IPosition.ts";
 
 const STORAGE_KEY = 'position_history'
@@ -48,6 +48,14 @@ export function usePositionHistory() {
     })
   }
 
+  const addMany = useCallback((items: Position[]) => {
+    setPositions(prev => {
+      const seen = new Set(prev.map(p => p.id));
+      const toAdd = items.filter(p => !seen.has(p.id));
+      return toAdd.length ? [...prev, ...toAdd] : prev;
+    });
+  }, []);
+
   const clearHistory = () => {
     setPositions([])
     localStorage.removeItem(STORAGE_KEY)
@@ -56,6 +64,7 @@ export function usePositionHistory() {
   return {
     positions,
     addPosition,
-    clearHistory
+    clearHistory,
+    addMany
   }
 }
