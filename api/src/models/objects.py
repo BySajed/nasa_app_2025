@@ -7,6 +7,9 @@ class MiniTrackPoint(BaseModel):
     t: str
     az: float
     el: float
+    x: float
+    y: float
+    z: float
     subLon: float
     subLat: float
 
@@ -26,5 +29,8 @@ class SkyObject(BaseModel):
     name: str
     az_deg: float
     el_deg: float
+    x: float
+    y: float
+    z: float
     geometry: dict  # GeoJSON Point (sub-point)
     props: SatelliteProps

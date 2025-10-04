@@ -1,6 +1,6 @@
 import httpx
 from typing import Dict, List, Tuple
-from ...dependencies.settings import settings
+from src.dependencies.settings import settings
 
 def parse_tle_text(text: str) -> List[Tuple[str, str, str]]:
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]

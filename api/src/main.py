@@ -5,7 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.middleware.cors import CORSMiddleware
 
 from .routers import sky, objects, weather, moon
-from .services.artificial.tle_cache import ensure_tle_cache
+from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
 from .dependencies.settings import settings
 
 logger = logging.getLogger("api")

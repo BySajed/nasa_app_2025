@@ -4,8 +4,8 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Query
 from ..dependencies.settings import settings
 from ..decorators.timing import timed
-from ..services.artificial.tle_cache import ensure_tle_cache
-from ..services.artificial.propagator_sgp4 import compute_above
+from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
+from src.services.sky_visualization.artificial.propagator_sgp4 import compute_above
 from ..models.responses import AboveResponse
 from ..services.sky_visualization.solar_system import get_solar_system_positions
 from ..services.sky_visualization.stars import get_visible_stars

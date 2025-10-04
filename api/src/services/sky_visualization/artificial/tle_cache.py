@@ -3,8 +3,8 @@ import json
 import logging
 import time
 from typing import Dict, Tuple
-from ...dependencies.redis_client import get_redis
-from ...dependencies.settings import settings
+from src.dependencies.redis_client import get_redis
+from src.dependencies.settings import settings
 from .catalogs_celestrak import fetch_celestrak_all
 
 logger = logging.getLogger("api")
