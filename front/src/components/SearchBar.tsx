@@ -5,7 +5,7 @@ import type { SearchBarProps } from "../interfaces/IMap";
 import searchLogo from '../assets/search.svg';
 
 
-const MAPBOX_ACCESS_TOKEN = import.meta.env.MAPBOX_ACCESS_TOKEN;
+const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
 const SearchBar: React.FC<SearchBarProps> = ({ setCity }) => {
 
@@ -33,7 +33,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ setCity }) => {
             </div>
             <div className="w-full">
                 <form onSubmit={handleSubmit} className="flex items-center justify-between w-full">
-                    <AddressAutofill accessToken={NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!}>
+                    <AddressAutofill accessToken={MAPBOX_ACCESS_TOKEN!}>
                         <input
                             type="text"
                             required

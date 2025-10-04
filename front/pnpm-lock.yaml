@@ -9,7 +9,7 @@ importers:
   .:
     dependencies:
       '@mapbox/search-js-react':
-        specifier: ^1.1.0
+        specifier: ^1.3.0
         version: 1.3.0(mapbox-gl@3.15.0)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       '@tailwindcss/vite':
         specifier: ^4.1.14
