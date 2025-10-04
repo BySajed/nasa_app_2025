@@ -30,8 +30,8 @@ jobs:
 
       - name: Create .env file
         run: |
-          ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }} >> .env
-          ${{ secrets.VITE_API_URL }} >> .env
+          echo "${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}" >> .env
+          echo "${{ secrets.VITE_API_URL }}" >> .env
 
       - name: Build and push
         uses: docker/build-push-action@v6
