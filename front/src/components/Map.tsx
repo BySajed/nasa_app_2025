@@ -1,67 +1,174 @@
-import React, { useEffect, useRef } from 'react';
-import mapboxgl from 'mapbox-gl';
-import 'mapbox-gl/dist/mapbox-gl.css';
-import type { MapProps } from '../interfaces/IMap';
+import React, { useEffect, useRef } from "react";
+import mapboxgl from "mapbox-gl";
+import "mapbox-gl/dist/mapbox-gl.css";
+import type { MapProps } from "../interfaces/IMap";
+import pinUrl from "../assets/marker.svg";
 
-const MAPBOX_ACCESS_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
+const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
+function navigateToSky(lng: number, lat: number) {
+    const params = new URLSearchParams({ lnt: String(lat), lgt: String(lng) });
+    window.location.assign(`/sky?${params.toString()}`);
+}
+
+async function forwardGeocode(query: string): Promise<[number, number] | null> {
+    if (!TOKEN) return null;
+    const url =
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json?` +
+        new URLSearchParams({ access_token: TOKEN, language: "fr", limit: "1" });
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    return data?.features?.[0]?.geometry?.coordinates ?? null;
+}
+
+async function reverseGeocode(lng: number, lat: number): Promise<string | null> {
+    if (!TOKEN) return null;
+    const url =
+        `https://api.mapbox.com/geocoding/v5/mapbox.places/${lng},${lat}.json?` +
+        new URLSearchParams({
+            access_token: TOKEN,
+            language: "fr",
+            types: "address,place,locality,neighborhood,poi",
+            limit: "1",
+        });
+    const res = await fetch(url);
+    if (!res.ok) return null;
+    const data = await res.json();
+    const f = data?.features?.[0];
+    return f?.properties?.place_formatted || f?.place_name || null;
+}
+
+function createMarkerElement(): HTMLElement {
+    const el = document.createElement("div");
+    el.style.width = "36px";
+    el.style.height = "36px";
+    el.style.backgroundImage = `url(${pinUrl})`;
+    el.style.backgroundSize = "contain";
+    el.style.backgroundRepeat = "no-repeat";
+    el.style.backgroundPosition = "center";
+    el.style.transform = "translateY(-6px)";
+    return el;
+}
+
+function isCameraClose(
+    map: mapboxgl.Map,
+    targetLng: number,
+    targetLat: number,
+    targetZoom: number
+): boolean {
+    const { lng, lat } = map.getCenter();
+    const z = map.getZoom();
+    const closePos = Math.abs(lng - targetLng) < 0.0005 && Math.abs(lat - targetLat) < 0.0005;
+    const closeZoom = z >= targetZoom - 0.05;
+    return closePos && closeZoom;
+}
 
 const Map: React.FC<MapProps> = ({ selectedCity }) => {
-
-
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
+    const markerRef = useRef<mapboxgl.Marker | null>(null);
 
-    async function fetchCityGpsCoordinates(city: string) {
-        const response = await fetch(`https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(city)}.json?access_token=${MAPBOX_ACCESS_TOKEN}`)
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
+    function ensureMarker(lng: number, lat: number) {
+        if (!mapRef.current) return;
+        if (!markerRef.current) {
+            markerRef.current = new mapboxgl.Marker({ element: createMarkerElement(), anchor: "bottom" })
+                .setLngLat([lng, lat])
+                .addTo(mapRef.current);
+        } else {
+            markerRef.current.setLngLat([lng, lat]);
         }
-        const data = await response.json();
-        return data.features[0].geometry.coordinates;
     }
 
-    // UseEffect pour initialiser la carte
+    function flyToAndNavigate(lng: number, lat: number, zoom = 13.5) {
+        const map = mapRef.current;
+        if (!map) return;
+
+        map.stop();
+
+        if (isCameraClose(map, lng, lat, zoom)) {
+            navigateToSky(lng, lat);
+            return;
+        }
+
+        map.once("moveend", () => navigateToSky(lng, lat));
+        map.flyTo({ center: [lng, lat], zoom, speed: 0.8, curve: 1.4, duration: 1200, essential: true });
+    }
+
+    function attachMarkerPopup(lng: number, lat: number, address?: string | null) {
+        if (!markerRef.current) return;
+        const btn = document.createElement("button");
+        btn.className = "btn btn-secondary";
+        btn.textContent = "Voir le ciel ici";
+        btn.onclick = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            flyToAndNavigate(lng, lat);
+        };
+
+        const wrapper = document.createElement("div");
+        if (address) {
+            const p = document.createElement("p");
+            p.style.marginBottom = "8px";
+            p.textContent = address;
+            wrapper.appendChild(p);
+        }
+        wrapper.appendChild(btn);
+
+        markerRef.current
+            .setPopup(
+                new mapboxgl.Popup({
+                    offset: 16,
+                    closeOnClick: false,
+                    focusAfterOpen: false,
+                    anchor: "bottom",
+                    maxWidth: "260px",
+                }).setDOMContent(wrapper)
+            )
+            .togglePopup();
+    }
+
     useEffect(() => {
-        if (mapRef.current) return;
-        if (!mapContainerRef.current) return;
+        if (mapRef.current || !mapContainerRef.current || !TOKEN) return;
 
-        mapboxgl.accessToken = MAPBOX_ACCESS_TOKEN;
-
-        mapRef.current = new mapboxgl.Map({
-            container: mapContainerRef.current as HTMLDivElement,
+        mapboxgl.accessToken = TOKEN;
+        const map = new mapboxgl.Map({
+            container: mapContainerRef.current,
+            style: "mapbox://styles/mapbox/standard",
             center: [2.3522, 48.8566],
             zoom: 2.5,
         });
+
+        mapRef.current = map;
+
+        map.on("click", async (e) => {
+            const { lng, lat } = e.lngLat;
+            ensureMarker(lng, lat);
+            const address = await reverseGeocode(lng, lat);
+            attachMarkerPopup(lng, lat, address);
+        });
+
+        return () => {
+            map.remove();
+            mapRef.current = null;
+            markerRef.current = null;
+        };
     }, []);
 
-    //UseEffect du flyTo
     useEffect(() => {
         if (!selectedCity || !mapRef.current) return;
-
-        fetchCityGpsCoordinates(selectedCity).then((coordinates) => {
-            console.log(coordinates);
-            mapRef.current?.flyTo({
-                center: coordinates,
-                zoom: 12.5,
-                speed: 0.8,
-                curve: 2,
-                easing(t) {
-                    return t;
-                }
-            });
+        forwardGeocode(selectedCity).then((coords) => {
+            if (!coords) return;
+            const [lng, lat] = coords;
+            ensureMarker(lng, lat);
+            flyToAndNavigate(lng, lat, 12.5);
         });
     }, [selectedCity]);
 
-    if (!MAPBOX_ACCESS_TOKEN) {
-        console.error('MAPBOX_ACCESS_TOKEN is not defined');
-    }
-
-
     return (
         <div
-            style={{ height: '100%', width: "100%", position: 'relative' }}
             ref={mapContainerRef}
+            style={{ height: "100%", width: "100%", position: "relative" }}
             className="map-container"
         />
     );
