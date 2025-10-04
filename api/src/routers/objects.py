@@ -1,6 +1,7 @@
-from fastapi import APIRouter, Query, HTTPException
+from datetime import datetime, timedelta, timezone
 from typing import Optional
-from datetime import datetime, timezone, timedelta
+
+from fastapi import APIRouter, HTTPException, Query
 
 from ..decorators.timing import timed
 from ..services.artificial.tle_cache import ensure_tle_cache
@@ -20,13 +21,33 @@ async def satellite_details(
     time_to: Optional[str] = Query(None, description="ISO UTC, défaut: now+1h"),
     stepSec: int = Query(10, ge=1, le=120)
 ):
-    await ensure_tle_cache()
+    try:
+        await ensure_tle_cache()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="TLE cache unavailable") from exc
+
     now = datetime.now(timezone.utc)
-    t_from = datetime.fromisoformat(time_from.replace("Z","+00:00")) if time_from else now
-    if time_to:
-        t_to = datetime.fromisoformat(time_to.replace("Z","+00:00"))
-    else:
-        t_to = now + timedelta(hours=1)
+
+    def parse_iso(value: str, field_name: str) -> datetime:
+        sanitized = value.replace("Z", "+00:00")
+        try:
+            parsed = datetime.fromisoformat(sanitized)
+        except ValueError as exc:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid {field_name}; expected ISO 8601 format (UTC).",
+            ) from exc
+        if parsed.tzinfo is None:
+            parsed = parsed.replace(tzinfo=timezone.utc)
+        else:
+            parsed = parsed.astimezone(timezone.utc)
+        return parsed
+
+    t_from = parse_iso(time_from, "time_from") if time_from else now
+    t_to = parse_iso(time_to, "time_to") if time_to else now + timedelta(hours=1)
+
+    if t_to < t_from:
+        raise HTTPException(status_code=400, detail="time_to must be greater than or equal to time_from")
 
     data = compute_details(norad_id, lat, lon, alt_m, t_from, t_to, stepSec)
     if not data:

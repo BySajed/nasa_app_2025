@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Query
+from fastapi import APIRouter, HTTPException, Query
 from ..dependencies.settings import settings
 from ..decorators.timing import timed
 from ..services.artificial.tle_cache import ensure_tle_cache
@@ -24,7 +24,10 @@ async def sky_above(
       - point : 1 point futur (t0 + trackStepSec)
       - triad : 3 points (t0, t0+trackStepSec, t0+2*trackStepSec)
     """
-    await ensure_tle_cache()
+    try:
+        await ensure_tle_cache()
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail="TLE cache unavailable") from exc
     data = compute_above(
         lat, lon, alt_m,
         limit, offset,

@@ -35,6 +35,8 @@ class Settings(BaseSettings):
     # Cache
     REDIS_URL: str | None = None
     TLE_REFRESH_HOURS: int = 6
+    TLE_FETCH_RETRIES: int = 3
+    TLE_FETCH_BACKOFF_SECONDS: float = 1.5
 
     class Config:
         env_file = ".env"
