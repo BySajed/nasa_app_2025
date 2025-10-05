@@ -131,6 +131,41 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     });
     map.addControl(new mapboxgl.NavigationControl());
 
+    const el = document.createElement("div");
+    el.id = "marker";
+
+    const hoverMarker = new mapboxgl.Marker(el)
+      .setLngLat([2.287592, 48.862725])
+      .addTo(map);
+
+    const hoverPopup = new mapboxgl.Popup({
+      offset: 16,
+      closeButton: false,
+      closeOnClick: false,
+      anchor: "bottom",
+      maxWidth: "220px",
+      className: "rounded-2xl popup-anim",
+    }).setText("Voir le ciel ici");
+
+    hoverMarker.setPopup(hoverPopup);
+    const hoverEl = hoverMarker.getElement();
+    hoverEl.addEventListener("mouseenter", () => {
+      if (!hoverPopup.isOpen()) hoverMarker.togglePopup();
+    });
+    hoverEl.addEventListener("mouseleave", () => {
+      if (!hoverPopup.isOpen()) return;
+      const elPopup = hoverPopup.getElement();
+      if (elPopup) {
+        elPopup.classList.add("popup-anim-out");
+        setTimeout(() => {
+          if (hoverPopup.isOpen()) hoverMarker.togglePopup();
+          elPopup.classList.remove("popup-anim-out");
+        }, 150);
+      } else {
+        hoverMarker.togglePopup();
+      }
+    });
+
     mapRef.current = map;
 
     map.on("click", async (e) => {
