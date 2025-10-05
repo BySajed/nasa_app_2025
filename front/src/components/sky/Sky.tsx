@@ -1,128 +1,151 @@
+// front/src/components/sky/Sky.tsx
 import * as THREE from "three";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars, StarDetailsPanel } from "./Star";
-import { SatelliteDetailsPanel, SatellitesLayer } from "./Satellite";
-import type { SatelliteObject } from "../../api/satellites";
-import { useMemo, useState } from "react";
-import { scalePosition } from "./utils";
-import { useCamera } from "./useCamera";
-import { Planets, PlanetDetailsPanel } from "./Planet";
-import type { Planet, Star } from "../../api/stars";
+import {Canvas, useFrame, useThree, useLoader} from "@react-three/fiber";
+import {Stars, StarDetailsPanel} from "./Star";
+import {SatelliteDetailsPanel, SatellitesLayer} from "./Satellite";
+import type {SatelliteObject} from "../../api/satellites";
+import {useMemo, useState} from "react";
+import {scalePosition} from "./utils";
+import {useCamera} from "./useCamera";
+import {Planets, PlanetDetailsPanel} from "./Planet";
+import type {Planet, Star} from "../../api/stars";
+import GrassBlock from "../../assets/grass.png?url";
 
-export function Sky({
-  stars,
-  satellites,
-  planets,
-  observer,
-}: {
-  stars: Star[];
-  satellites: SatelliteObject[];
-  planets: Planet[];
-  observer?: { lat: number; lon: number; alt_m?: number } | null;
+export function Sky({stars, satellites, planets, observer,}: {
+    stars: Star[];
+    satellites: SatelliteObject[];
+    planets: Planet[];
+    observer?: { lat: number; lon: number; alt_m?: number } | null;
 }) {
-  const { canvasProps, cameraProps, rotation, zoom } = useCamera();
+    const {canvasProps, cameraProps, rotation, zoom} = useCamera();
 
-  const [selectedSatellite, setSelectedSatellite] =
-    useState<SatelliteObject | null>(null);
+    const [selectedSatellite, setSelectedSatellite] =
+        useState<SatelliteObject | null>(null);
 
-  const [selectedStar, setSelectedStar] =
-    useState<Star | null>(null);
+    const [selectedStar, setSelectedStar] = useState<Star | null>(null);
 
-  const [selectedPlanet, setSelectedPlanet] =
-    useState<Planet | null>(null);
+    const [selectedPlanet, setSelectedPlanet] = useState<Planet | null>(null);
 
-  const skySphereRadius = useMemo(() => {
-    const sample = stars.find((star) => !!star);
-    if (!sample) {
-      return 400;
+    const skySphereRadius = useMemo(() => {
+        const sample = stars.find((star) => !!star);
+        if (!sample) {
+            return 400;
+        }
+        const [sx, sy, sz] = scalePosition([sample.x, sample.y, sample.z]);
+        return Math.sqrt(sx * sx + sy * sy + sz * sz) || 400;
+    }, [stars]);
+
+    function handleSelectSatellite(sat: SatelliteObject) {
+        setSelectedSatellite(sat);
+        setSelectedStar(null);
+        setSelectedPlanet(null);
     }
-    const [sx, sy, sz] = scalePosition([sample.x, sample.y, sample.z]);
-    return Math.sqrt(sx * sx + sy * sy + sz * sz) || 400;
-  }, [stars]);
 
-  function handleSelectSatellite(sat: SatelliteObject) {
-    setSelectedSatellite(sat);
-    setSelectedStar(null);
-    setSelectedPlanet(null);
-  }
+    function handleSelectStar(star: Star) {
+        setSelectedStar(star);
+        setSelectedSatellite(null);
+        setSelectedPlanet(null);
+    }
 
-  function handleSelectStar(star: Star) {
-    setSelectedStar(star);
-    setSelectedSatellite(null);
-    setSelectedPlanet(null);
-  }
+    function handleSelectPlanet(planet: Planet) {
+        setSelectedPlanet(planet);
+        setSelectedSatellite(null);
+        setSelectedStar(null);
+    }
 
-  function handleSelectPlanet(planet: Planet) {
-    setSelectedPlanet(planet);
-    setSelectedSatellite(null);
-    setSelectedStar(null);
-  }
+    return (
+        <div className="w-screen h-screen relative">
+            <Canvas
+                {...canvasProps}
+                shadows
+                scene={{
+                    background: new THREE.Color(0x000000),
+                }}
+                camera={cameraProps}
+            >
+                <CameraController rotation={rotation} zoom={zoom}/>
 
-  return (
-    <div className="w-screen h-screen relative">
-      <Canvas
-        {...canvasProps}
-        scene={{
-          background: new THREE.Color(0x000000),
-        }}
-        camera={cameraProps}
-      >
-        <CameraController rotation={rotation} zoom={zoom} />
-        <ambientLight />
-        <Stars
-          stars={stars}
-          selectedStar={selectedStar}
-          onSelect={handleSelectStar}
-        />
-        <SatellitesLayer
-          satellites={satellites}
-          displayRadius={skySphereRadius}
-          onSelect={handleSelectSatellite}
-        />
-        <Planets
-          planets={planets}
-          selectedPlanet={selectedPlanet}
-          onSelect={handleSelectPlanet}
-        />
-      </Canvas>
+                <directionalLight
+                    intensity={0.8}
+                    position={[100, 200, 100]}
+                    castShadow
+                    shadow-mapSize-width={2048}
+                    shadow-mapSize-height={2048}
+                />
+                <ambientLight intensity={0.3}/>
 
-      {selectedSatellite && observer && (
-        <SatelliteDetailsPanel
-          satellite={selectedSatellite}
-          observer={observer}
-          onClose={() => setSelectedSatellite(null)}
-        />
-      )}
+                <Stars
+                    stars={stars}
+                    selectedStar={selectedStar}
+                    onSelect={handleSelectStar}
+                />
+                <SatellitesLayer
+                    satellites={satellites}
+                    displayRadius={skySphereRadius}
+                    onSelect={handleSelectSatellite}
+                />
+                <Planets
+                    planets={planets}
+                    selectedPlanet={selectedPlanet}
+                    onSelect={handleSelectPlanet}
+                />
 
-      {selectedStar && (
-        <StarDetailsPanel
-          star={selectedStar}
-          onClose={() => setSelectedStar(null)}
-        />
-      )}
+                <EarthFloor radius={skySphereRadius} textureUrl={GrassBlock}/>
+            </Canvas>
 
-      {selectedPlanet && (
-        <PlanetDetailsPanel
-          planet={selectedPlanet}
-          onClose={() => setSelectedPlanet(null)}
-        />
-      )}
-    </div>
-  );
+            {selectedSatellite && observer && (
+                <SatelliteDetailsPanel
+                    satellite={selectedSatellite}
+                    observer={observer}
+                    onClose={() => setSelectedSatellite(null)}
+                />
+            )}
+
+            {selectedStar && (
+                <StarDetailsPanel
+                    star={selectedStar}
+                    onClose={() => setSelectedStar(null)}
+                />
+            )}
+
+            {selectedPlanet && (
+                <PlanetDetailsPanel
+                    planet={selectedPlanet}
+                    onClose={() => setSelectedPlanet(null)}
+                />
+            )}
+        </div>
+    );
 }
 
-function CameraController({
-  rotation,
-  zoom,
-}: {
-  rotation: [number, number, number];
-  zoom: number;
-}) {
-  const { camera } = useThree();
-  useFrame(() => {
-    camera.rotation.set(...rotation);
-    camera.zoom = zoom;
-    camera.updateProjectionMatrix();
-  });
-  return null;
+function CameraController({rotation, zoom,}: { rotation: [number, number, number]; zoom: number; }) {
+    const {camera} = useThree();
+    useFrame(() => {
+        camera.rotation.set(...rotation);
+        camera.zoom = zoom;
+        camera.updateProjectionMatrix();
+    });
+    return null;
+}
+
+function EarthFloor({radius, textureUrl}: { radius: number; textureUrl: string; }) {
+    const texture = useLoader(THREE.TextureLoader, textureUrl);
+
+    texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+    texture.repeat.set(100, 100);
+
+    const size = Math.max(1000, radius * 6);
+
+    const zOffset = -Math.max(1, radius * 0.02);
+
+    return (
+        <mesh
+            rotation={[-Math.PI / 2, 0, 0]}
+            position={[0, 0, zOffset]}
+            receiveShadow
+        >
+            <planeGeometry args={[size, size]}/>
+            <meshStandardMaterial map={texture} side={THREE.DoubleSide}/>
+        </mesh>
+    );
 }
