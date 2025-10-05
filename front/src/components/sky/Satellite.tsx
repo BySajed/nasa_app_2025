@@ -59,11 +59,6 @@ function SatelliteSprite({ object, displayRadius, onClick }: SatelliteSpriteProp
         [displayRadius, object.x, object.y, object.z]
     );
 
-    const distanceKm = useMemo(
-        () => Math.sqrt(object.x ** 2 + object.y ** 2 + object.z ** 2),
-        [object.x, object.y, object.z]
-    );
-
     useFrame(({ camera, size }) => {
         const sprite = spriteRef.current;
         if (!sprite) return;
@@ -71,15 +66,13 @@ function SatelliteSprite({ object, displayRadius, onClick }: SatelliteSpriteProp
         const perspective = camera as THREE.PerspectiveCamera;
         const distanceToCamera = displayRadius;
         const vFov = (perspective.fov * Math.PI) / 180;
-        const worldHeight = 2 * Math.tan(vFov / 2) * distanceToCamera;
-        const worldPerPixel = worldHeight / size.height;
+        const worldHeight =
+            (2 * Math.tan(vFov / 2) * distanceToCamera) /
+            Math.max(perspective.zoom, 1e-6);
+        const worldPerPixel = worldHeight / Math.max(size.height, 1);
 
-        const desiredPixels = THREE.MathUtils.clamp(
-            10 + Math.log10(distanceKm + 1) * 1.5,
-            8,
-            18
-        );
-        const worldSize = Math.max(6, desiredPixels * worldPerPixel);
+        const desiredPixels = 14;
+        const worldSize = Math.max(desiredPixels * worldPerPixel, 2);
         sprite.scale.set(worldSize, worldSize, 1);
     });
 

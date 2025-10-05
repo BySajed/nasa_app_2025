@@ -22,7 +22,7 @@ export function SkyPage() {
     Promise.all([
       getVisibleStars(lon, lat),
       getPlanets(lon, lat),
-      getSatellites({ lat, lon, alt_m, limit: 30, trackMode: "none" }),
+      getSatellites({ lat, lon, alt_m, limit: 70, trackMode: "none" }),
     ])
       .then(([stars, planets, satellites]) => {
         setStars(stars);
