@@ -72,7 +72,7 @@ export function Sky({stars, satellites, planets, observer,}: {
                     shadow-mapSize-width={2048}
                     shadow-mapSize-height={2048}
                 />
-                <ambientLight intensity={0.3}/>
+                <ambientLight intensity={0.6}/>
 
                 <Stars
                     stars={stars}
@@ -128,7 +128,7 @@ function CameraController({rotation, zoom,}: { rotation: [number, number, number
     return null;
 }
 
-function EarthFloor({radius, textureUrl}: { radius: number; textureUrl: string; }) {
+function EarthFloor({ radius, textureUrl }: { radius: number; textureUrl: string; }) {
     const texture = useLoader(THREE.TextureLoader, textureUrl);
 
     texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -136,16 +136,13 @@ function EarthFloor({radius, textureUrl}: { radius: number; textureUrl: string; 
 
     const size = Math.max(1000, radius * 6);
 
-    const zOffset = -Math.max(1, radius * 0.02);
-
     return (
         <mesh
-            rotation={[-Math.PI / 2, 0, 0]}
-            position={[0, 0, zOffset]}
+            position={[0, 0, -20]}
             receiveShadow
         >
-            <planeGeometry args={[size, size]}/>
-            <meshStandardMaterial map={texture} side={THREE.DoubleSide}/>
+            <planeGeometry args={[size, size]} />
+            <meshStandardMaterial map={texture} side={THREE.DoubleSide} />
         </mesh>
     );
 }
