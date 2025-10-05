@@ -91,8 +91,15 @@ function Home() {
           </div>
           <SearchBar searchCity={true} setCity={setSelectedVille} />
         </div>
-        <div className="flex flex-col gap-4 my-4 w-full">
-          <ul className="flex flex-col gap-2 overflow-y-hidden">
+        <div className="flex flex-col gap-4 my-4 w-full min-h-0 overflow-hidden">
+          <ul
+            className="
+              flex flex-col gap-2
+              overflow-y-auto overflow-x-hidden overscroll-contain
+              max-h-[calc(100dvh-8rem)] 
+              pr-2                       
+            "
+          >
             {positions.map((pos) => (
               <CardHistoryPosition
                 key={pos.id}
@@ -102,6 +109,7 @@ function Home() {
             ))}
           </ul>
         </div>
+
       </div>
 
       <div className="w-full h-full col-span-2 overflow-hidden p-4">
