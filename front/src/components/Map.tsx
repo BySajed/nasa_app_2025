@@ -10,15 +10,6 @@ import {usePositionHistory} from "../hooks/usePositionHistory.ts";
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 const WEATHER_API_BASE = import.meta.env.VITE_WEATHER_API_BASE as string | undefined;
 
-type Particle = {
-    x: number;
-    y: number;
-    vy: number;
-    vx: number;
-    len: number;
-    size: number;
-};
-
 function createMarkerElement(): HTMLElement {
     const el = document.createElement("div");
     el.style.width = "36px";
@@ -50,12 +41,10 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
     const mapRef = useRef<mapboxgl.Map | null>(null);
     const markerRef = useRef<mapboxgl.Marker | null>(null);
     const overlayRef = useRef<HTMLDivElement | null>(null);
-    const canvasRef = useRef<HTMLCanvasElement | null>(null);
-    const animationFrameRef = useRef<number | null>(null);
-    const particlesRef = useRef<Particle[]>([]);
     const weatherModeRef = useRef<WeatherMode>("off");
     const lightRef = useRef<LightIntensity>("Day");
     const lastWeatherFetchTimer = useRef<number | null>(null);
+    const styleLoadedRef = useRef<boolean>(false);
 
     const navigateToSky = useNavigateToSky();
     const {addPosition} = usePositionHistory();
@@ -84,17 +73,13 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             const res = await fetch(url, {headers: {accept: "application/json"}});
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
             const data: WeatherApiResponse = await res.json();
-
             const c = data.current;
             if (!c) return ["off", "Day", 0];
-
             const hasSnow = (c.snowfall ?? 0) > 0;
             const hasRain = (c.rain ?? 0) > 0 || (c.showers ?? 0) > 0 || (c.precipitation ?? 0) > 0.2;
-
             const weather: Weather = hasSnow ? "snow" : hasRain ? "rain" : "off";
             const light: LightIntensity = c.is_day === 1 ? "Day" : "Night";
             const clouds = Math.max(0, Math.min(100, c.cloud_cover ?? 0));
-
             return [weather, light, clouds];
         } catch (e) {
             console.error("getWeatherFromData :" + e);
@@ -105,36 +90,70 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
     function getWeatherHeuristic(): [Weather, LightIntensity] {
         if (!mapRef.current) return ["off", "Day"];
         const zoom = mapRef.current.getZoom();
-
         let weather: Weather = "off";
         if (zoom > 10) weather = "rain";
         else if (zoom < 4) weather = "snow";
-
         const light: LightIntensity = zoom >= 6 ? "Day" : "Night";
         return [weather, light];
+    }
+
+    function applyLight(light: LightIntensity) {
+        if (!mapRef.current || !styleLoadedRef.current) return;
+        const preset = light === "Night" ? "night" : "day";
+        mapRef.current.setConfigProperty("basemap", "lightPreset", preset);
+        mapRef.current.setConfigProperty("basemap", "showPlaceLabels", true);
+        mapRef.current.setConfigProperty("basemap", "showPointOfInterestLabels", true);
+        mapRef.current.setConfigProperty("basemap", "showRoadLabels", true);
+        mapRef.current.setConfigProperty("basemap", "showTransitLabels", true);
+    }
+
+    function applyWeather(mode: WeatherMode) {
+        if (!mapRef.current || !styleLoadedRef.current) return;
+        const m = mapRef.current as any;
+        if (mode === "rain") {
+            m.setSnow({density: 0, intensity: 0, opacity: 0, color: "#FFFFFF", "center-thinning": 0.4, direction: [0, 50], "flake-size": 0.71, vignette: 0.3, vignetteColor: "#FFFFFF"});
+            m.setRain({
+                density: 1,
+                intensity: 1,
+                color: "#919191",
+                opacity: 0.19,
+                "center-thinning": 0,
+                direction: [0, 50],
+                "droplet-size": [1, 10],
+                "distortion-strength": 0.5,
+                vignette: 0.5,
+                vignetteColor: "#6e6e6e"
+            });
+        } else if (mode === "snow") {
+            m.setRain({density: 0, intensity: 0, opacity: 0, color: "#919191", "center-thinning": 0, direction: [0, 50], "droplet-size": [1, 10], "distortion-strength": 0.5, vignette: 0.5, vignetteColor: "#6e6e6e"});
+            m.setSnow({
+                density: 0.85,
+                intensity: 1,
+                color: "#FFFFFF",
+                opacity: 1,
+                "center-thinning": 0.4,
+                direction: [0, 50],
+                "flake-size": 0.71,
+                vignette: 0.3,
+                vignetteColor: "#FFFFFF"
+            });
+        } else {
+            m.setRain({density: 0, intensity: 0, opacity: 0, color: "#919191", "center-thinning": 0, direction: [0, 50], "droplet-size": [1, 10], "distortion-strength": 0.5, vignette: 0.5, vignetteColor: "#6e6e6e"});
+            m.setSnow({density: 0, intensity: 0, opacity: 0, color: "#FFFFFF", "center-thinning": 0.4, direction: [0, 50], "flake-size": 0.71, vignette: 0.3, vignetteColor: "#FFFFFF"});
+        }
     }
 
     function flyToAndNavigate(lng: number, lat: number, zoom = 13.5) {
         const map = mapRef.current;
         if (!map) return;
-
         map.stop();
         addPosition(lat, lng, selectedCity || undefined, undefined);
-
         if (isCameraClose(map, lng, lat, zoom)) {
             navigateToSky(lat, lng);
             return;
         }
-
         map.once("moveend", () => navigateToSky(lat, lng));
-        map.flyTo({
-            center: [lng, lat],
-            zoom,
-            speed: 0.8,
-            curve: 1.4,
-            duration: 1200,
-            essential: true,
-        });
+        map.flyTo({center: [lng, lat], zoom, speed: 0.8, curve: 1.4, duration: 1200, essential: true});
     }
 
     function attachMarkerPopup(lng: number, lat: number, address?: string | null) {
@@ -147,7 +166,6 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             e.stopPropagation();
             flyToAndNavigate(lng, lat);
         };
-
         const wrapper = document.createElement("div");
         wrapper.className = "flex flex-col items-center";
         if (address) {
@@ -157,7 +175,6 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             wrapper.appendChild(p);
         }
         wrapper.appendChild(btn);
-
         markerRef.current
             .setPopup(
                 new mapboxgl.Popup({
@@ -186,24 +203,14 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         overlayRef.current.textContent = parts.join("  •  ");
     }
 
-    function applyVisuals(light: LightIntensity, cloudsPct: number) {
-        if (wrapperRef.current) {
-            const base = light === "Night" ? 0.75 : 1;
-            const cloudFactor = 1 - Math.min(0.2, (cloudsPct / 100) * 0.2);
-            wrapperRef.current.style.filter = `brightness(${(base * cloudFactor).toFixed(2)})`;
-        }
-    }
-
     async function handleZoomLevel(zoom: number, center: {lng: number; lat: number}) {
         updateOverlay(center.lng, center.lat, zoom);
-
         if (lastWeatherFetchTimer.current) {
             window.clearTimeout(lastWeatherFetchTimer.current);
             lastWeatherFetchTimer.current = null;
         }
         lastWeatherFetchTimer.current = window.setTimeout(async () => {
-            const [weather, light, clouds] = await getWeatherFromData(center.lat, center.lng);
-
+            const [weather, light] = await getWeatherFromData(center.lat, center.lng);
             let finalWeather = weather;
             let finalLight = light;
             if (weather === "off" && light === "Day") {
@@ -211,113 +218,32 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 finalWeather = w2;
                 finalLight = l2;
             }
-
             weatherModeRef.current = finalWeather;
             lightRef.current = finalLight;
-            applyVisuals(finalLight, clouds);
+            applyWeather(finalWeather);
+            applyLight(finalLight);
             updateOverlay(center.lng, center.lat, zoom, finalWeather, finalLight);
         }, 300);
     }
 
     useEffect(() => {
-        const canvas = canvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) return;
-
-        const resize = () => {
-            if (!wrapperRef.current) return;
-            canvas.width = wrapperRef.current.clientWidth;
-            canvas.height = wrapperRef.current.clientHeight;
-        };
-        resize();
-        window.addEventListener("resize", resize);
-
-        function initParticles(mode: WeatherMode) {
-            if (!ctx || !canvas) return;
-
-            particlesRef.current = [];
-            const count = mode === "rain" ? 200 : mode === "snow" ? 100 : 0;
-            for (let i = 0; i < count; i++) {
-                particlesRef.current.push({
-                    x: Math.random() * canvas.width,
-                    y: Math.random() * canvas.height,
-                    vy: mode === "rain" ? 6 + Math.random() * 4 : 0.5 + Math.random() * 1.5,
-                    vx: mode === "rain" ? 0 : -0.5 + Math.random() * 1,
-                    len: mode === "rain" ? 10 + Math.random() * 10 : 1 + Math.random() * 3,
-                    size: mode === "snow" ? 1 + Math.random() * 3 : 0,
-                });
-            }
-        }
-
-        function tick() {
-            if (!ctx || !canvas) return;
-
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            const mode = weatherModeRef.current;
-            if (mode !== "off") {
-                if (particlesRef.current.length === 0) {
-                    initParticles(mode);
-                }
-                if (mode === "rain") {
-                    ctx.strokeStyle = "rgba(174,194,224,0.6)";
-                    ctx.lineWidth = 1;
-                    for (const p of particlesRef.current) {
-                        ctx.beginPath();
-                        ctx.moveTo(p.x, p.y);
-                        ctx.lineTo(p.x + p.vx * p.len, p.y + p.vy * p.len);
-                        ctx.stroke();
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        if (p.y > canvas.height) {
-                            p.y = -20;
-                            p.x = Math.random() * canvas.width;
-                        }
-                    }
-                } else if (mode === "snow") {
-                    ctx.fillStyle = "rgba(255,255,255,0.9)";
-                    for (const p of particlesRef.current) {
-                        ctx.beginPath();
-                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
-                        ctx.fill();
-                        p.x += p.vx;
-                        p.y += p.vy;
-                        if (p.y > canvas.height) {
-                            p.y = -10;
-                            p.x = Math.random() * canvas.width;
-                        }
-                    }
-                }
-            } else {
-                particlesRef.current = [];
-            }
-
-            animationFrameRef.current = requestAnimationFrame(tick);
-        }
-
-        animationFrameRef.current = requestAnimationFrame(tick);
-
-        return () => {
-            if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
-            window.removeEventListener("resize", resize);
-        };
-    }, []);
-
-    useEffect(() => {
         if (mapRef.current || !mapContainerRef.current || !TOKEN) return;
-
         mapboxgl.accessToken = TOKEN;
         const map = new mapboxgl.Map({
             container: mapContainerRef.current,
             style: "mapbox://styles/mapbox/standard",
             center: [2.3522, 48.8566],
             zoom: 2.3,
+            pitch: 0,
+            bearing: 0
         });
         map.addControl(new mapboxgl.NavigationControl());
-
         mapRef.current = map;
 
-        map.on("load", () => {
+        map.on("style.load", () => {
+            styleLoadedRef.current = true;
+            map.setConfigProperty("basemap", "lightPreset", "day");
+            applyWeather("off");
             const c = map.getCenter();
             handleZoomLevel(map.getZoom(), {lng: c.lng, lat: c.lat});
         });
@@ -349,12 +275,12 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             map.remove();
             mapRef.current = null;
             markerRef.current = null;
+            styleLoadedRef.current = false;
         };
     }, []);
 
     useEffect(() => {
         if (!selectedCity || !mapRef.current) return;
-
         forwardGeocode(selectedCity).then((coords) => {
             if (!coords) return;
             const [lng, lat] = coords;
@@ -373,18 +299,6 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 ref={mapContainerRef}
                 style={{height: "100%", width: "100%"}}
                 className="map-container"
-            />
-            <canvas
-                ref={canvasRef}
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    pointerEvents: "none",
-                    mixBlendMode: "screen",
-                }}
             />
             <div
                 ref={overlayRef}
