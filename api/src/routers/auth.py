@@ -1,13 +1,15 @@
 from fastapi import APIRouter, Depends, HTTPException
 from src.services.database import get_session
-from src.services.auth import get_password_hash, verify_password, create_access_token
+from src.services.auth import get_password_hash, verify_password, create_access_token, get_current_user
+from src.services.auth import get_password_hash, verify_password, create_access_token, get_current_user
 from src.schemas.user_create import UserCreate
 from src.schemas.user_login import UserLogin
 from src.models.user import User
 from sqlmodel import Session, select
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["auth"])
 
+@router.post("/signup")
 @router.post("/signup")
 def signup(user: UserCreate, session: Session = Depends(get_session)):
     existing = session.exec(select(User).where(User.username == user.username)).first()
@@ -20,6 +22,7 @@ def signup(user: UserCreate, session: Session = Depends(get_session)):
     session.refresh(new_user)
     return {"message": "User created"}
 
+
 @router.post("/login")
 def login(user: UserLogin, session: Session = Depends(get_session)):
     db_user = session.exec(select(User).where(User.username == user.username)).first()
@@ -27,3 +30,8 @@ def login(user: UserLogin, session: Session = Depends(get_session)):
         raise HTTPException(status_code=400, detail="Invalid credentials")
     token = create_access_token({"sub": str(db_user.id)})
     return {"access_token": token, "token_type": "bearer"}
+
+
+@router.get("/me")
+def me(user: User = Depends(get_current_user)):
+    return user

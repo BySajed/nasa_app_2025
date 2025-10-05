@@ -9,6 +9,8 @@ from src.services.sky_visualization.artificial.propagator_sgp4 import compute_ab
 from src.models.responses import AboveResponse
 from src.services.sky_visualization.solar_system import get_solar_system_positions
 from src.services.sky_visualization.stars import get_visible_stars
+from datetime import datetime, timezone
+from typing import Optional
 
 router = APIRouter(prefix="/sky", tags=["sky"])
 

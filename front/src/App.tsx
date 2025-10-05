@@ -11,6 +11,7 @@ import { AnimatePresence } from "framer-motion";
 import Home from "./pages/Home";
 import { SkyPage } from "./pages/SkyPage.tsx";
 import PageWrapper from "./components/PageWrapper.tsx";
+import { AuthProvider } from "./contexts/AuthContext";
 
 function RoutesWithTransitions() {
   const location = useLocation();
@@ -46,8 +47,10 @@ function RoutesWithTransitions() {
 
 export default function App() {
   return (
-    <BrowserRouter>
-      <RoutesWithTransitions />
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <RoutesWithTransitions />
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
