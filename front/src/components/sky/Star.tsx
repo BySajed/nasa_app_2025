@@ -54,12 +54,11 @@ export function StarDetailsPanel({ star, onClose }: StarDetailsPanelProps) {
 
       <div className="text-xs space-y-1">
         <p>
-          Magnitude: <span className="font-medium">{star.magnitude.toFixed(2)}</span>
+          Magnitude:{" "}
+          <span className="font-medium">{star.magnitude.toFixed(2)}</span>
         </p>
         {typeof star.temperature_kelvin === "number" && (
-          <p>
-            Temperature: {Math.round(star.temperature_kelvin)} K
-          </p>
+          <p>Temperature: {Math.round(star.temperature_kelvin)} K</p>
         )}
         {typeof star.earth_distance_ly === "number" && (
           <p>Distance: {star.earth_distance_ly.toFixed(2)} Light-years</p>
@@ -142,4 +141,3 @@ function makeSpriteTexture(color: string) {
   texture.needsUpdate = true;
   return texture;
 }
-
