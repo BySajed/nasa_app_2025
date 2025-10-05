@@ -91,15 +91,18 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         if (!mapRef.current) return ["off", "Day"];
         const zoom = mapRef.current.getZoom();
         let weather: Weather = "off";
-        if (zoom > 10) weather = "rain";
-        else if (zoom < 4) weather = "snow";
-        const light: LightIntensity = zoom >= 6 ? "Day" : "Night";
-        return [weather, light];
+        if (zoom > 17) weather = "rain";
+        else if (zoom < 6) weather = "snow";
+        const lightZoom: LightIntensity =
+            zoom >= 18 ? "Day" :
+                zoom >= 16 ? "Dusk" :
+                    zoom >= 14 ? "Dawn" : "Night";
+        return [weather, lightZoom];
     }
 
     function applyLight(light: LightIntensity) {
         if (!mapRef.current || !styleLoadedRef.current) return;
-        const preset = light === "Night" ? "night" : "day";
+        const preset = light.toLowerCase();
         mapRef.current.setConfigProperty("basemap", "lightPreset", preset);
         mapRef.current.setConfigProperty("basemap", "showPlaceLabels", true);
         mapRef.current.setConfigProperty("basemap", "showPointOfInterestLabels", true);
@@ -109,9 +112,9 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
 
     function applyWeather(mode: WeatherMode) {
         if (!mapRef.current || !styleLoadedRef.current) return;
-        const m = mapRef.current as any;
+        const m = mapRef.current;
         if (mode === "rain") {
-            m.setSnow({density: 0, intensity: 0, opacity: 0, color: "#FFFFFF", "center-thinning": 0.4, direction: [0, 50], "flake-size": 0.71, vignette: 0.3, vignetteColor: "#FFFFFF"});
+            m.setSnow({density: 0, intensity: 0, opacity: 0, color: "#FFFFFF", "center-thinning": 0.4, direction: [0, 50], "flake-size": 0.71, vignette: 0.3});
             m.setRain({
                 density: 1,
                 intensity: 1,
@@ -122,10 +125,9 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 "droplet-size": [1, 10],
                 "distortion-strength": 0.5,
                 vignette: 0.5,
-                vignetteColor: "#6e6e6e"
             });
         } else if (mode === "snow") {
-            m.setRain({density: 0, intensity: 0, opacity: 0, color: "#919191", "center-thinning": 0, direction: [0, 50], "droplet-size": [1, 10], "distortion-strength": 0.5, vignette: 0.5, vignetteColor: "#6e6e6e"});
+            m.setRain({density: 0, intensity: 0, opacity: 0, color: "#919191", "center-thinning": 0, direction: [0, 50], "droplet-size": [1, 10], "distortion-strength": 0.5, vignette: 0.5});
             m.setSnow({
                 density: 0.85,
                 intensity: 1,
@@ -135,11 +137,10 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 direction: [0, 50],
                 "flake-size": 0.71,
                 vignette: 0.3,
-                vignetteColor: "#FFFFFF"
             });
         } else {
-            m.setRain({density: 0, intensity: 0, opacity: 0, color: "#919191", "center-thinning": 0, direction: [0, 50], "droplet-size": [1, 10], "distortion-strength": 0.5, vignette: 0.5, vignetteColor: "#6e6e6e"});
-            m.setSnow({density: 0, intensity: 0, opacity: 0, color: "#FFFFFF", "center-thinning": 0.4, direction: [0, 50], "flake-size": 0.71, vignette: 0.3, vignetteColor: "#FFFFFF"});
+            m.setRain({density: 0, intensity: 0, opacity: 0, color: "#919191", "center-thinning": 0, direction: [0, 50], "droplet-size": [1, 10], "distortion-strength": 0.5, vignette: 0.5 });
+            m.setSnow({density: 0, intensity: 0, opacity: 0, color: "#FFFFFF", "center-thinning": 0.4, direction: [0, 50], "flake-size": 0.71, vignette: 0.3});
         }
     }
 
@@ -198,8 +199,10 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
     ) {
         if (!overlayRef.current) return;
         const parts = [`Lng: ${lng.toFixed(5)}`, `Lat: ${lat.toFixed(5)}`, `Zoom: ${zoom.toFixed(2)}`];
-        if (weather) parts.push(`Weather: ${weather}`);
-        if (light) parts.push(`Light: ${light}`);
+        if (zoom >= 15) {
+            if (weather) parts.push(`Weather: ${weather}`);
+            if (light) parts.push(`Light: ${light}`);
+        }
         overlayRef.current.textContent = parts.join("  •  ");
     }
 
@@ -210,10 +213,18 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             lastWeatherFetchTimer.current = null;
         }
         lastWeatherFetchTimer.current = window.setTimeout(async () => {
-            const [weather, light] = await getWeatherFromData(center.lat, center.lng);
-            let finalWeather = weather;
-            let finalLight = light;
-            if (weather === "off" && light === "Day") {
+            if (zoom < 15) {
+                weatherModeRef.current = "off";
+                lightRef.current = "Day";
+                applyWeather("off");
+                applyLight("Day");
+                updateOverlay(center.lng, center.lat, zoom);
+                return;
+            }
+            const [weatherFromApi, lightFromApi] = await getWeatherFromData(center.lat, center.lng);
+            let finalWeather = weatherFromApi;
+            let finalLight = lightFromApi;
+            if (finalWeather === "off") {
                 const [w2, l2] = getWeatherHeuristic();
                 finalWeather = w2;
                 finalLight = l2;
@@ -251,7 +262,8 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         map.on("move", () => {
             const c = map.getCenter();
             const z = map.getZoom();
-            updateOverlay(c.lng, c.lat, z, weatherModeRef.current, lightRef.current);
+            const show = z >= 15;
+            updateOverlay(c.lng, c.lat, z, show ? weatherModeRef.current : undefined, show ? lightRef.current : undefined);
         });
 
         map.on("moveend", () => {
