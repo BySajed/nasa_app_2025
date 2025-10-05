@@ -2,4 +2,4 @@
 **/.idea
 **/__pycache__
 .env
-src/database.db
+database.db
