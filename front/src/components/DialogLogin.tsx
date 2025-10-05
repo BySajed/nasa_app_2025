@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { User, Lock, EyeOff, Eye } from "lucide-react";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuthContext";
 
 const DialogLogin = () => {
   const [username, setUsername] = useState("");
@@ -133,9 +133,15 @@ const DialogLogin = () => {
                 className="text-sm font-normal text-gray-700 underline hover:text-gray-900"
                 onClick={() => {
                   if (document) {
-                    const loginModal = document.getElementById("login_modal") as HTMLDialogElement;
+                    const loginModal = document.getElementById(
+                      "login_modal"
+                    ) as HTMLDialogElement;
                     if (loginModal) loginModal.close();
-                    (document.getElementById("register_modal") as HTMLFormElement).showModal();
+                    (
+                      document.getElementById(
+                        "register_modal"
+                      ) as HTMLFormElement
+                    ).showModal();
                   }
                 }}
               >

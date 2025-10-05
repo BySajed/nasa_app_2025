@@ -7,7 +7,7 @@ import CardHistoryPosition from "../components/CardHistoryPosition";
 import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import Avatar from "../components/Avatar.tsx";
 import DialogLogin from "../components/DialogLogin.tsx";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/useAuthContext";
 import DialogRegister from "../components/DialogRegister";
 
 function Home() {
