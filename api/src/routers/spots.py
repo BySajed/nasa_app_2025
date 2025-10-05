@@ -40,6 +40,24 @@ def list_spots(session: Session = Depends(get_session)):
     return spots
 
 
+@router.delete("/{spot_id}")
+def delete_spot(
+    spot_id: int,
+    user: User = Depends(get_current_user),
+    session: Session = Depends(get_session),
+):
+    spot = session.get(Spot, spot_id)
+    if not spot:
+        raise HTTPException(status_code=404, detail="Spot not found")
+    if spot.owner_id != user.id:
+        raise HTTPException(status_code=403, detail="Not allowed to delete this spot")
+    if len(spot.reviews) > 0:
+        raise HTTPException(status_code=400, detail="Spot has reviews")
+    session.delete(spot)
+    session.commit()
+    return {"status": "deleted", "id": spot_id}
+
+
 @router.post("/reviews")
 def create_review(
     review: ReviewCreate,
