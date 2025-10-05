@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import ReactDOMServer from "react-dom/server";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type { MapProps } from "../interfaces/IMap";
@@ -7,23 +8,14 @@ import { forwardGeocode, reverseGeocode } from "../lib/geocoding";
 import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import { usePositionHistory } from "../hooks/usePositionHistory.ts";
 import { apiClient } from "../api/client.ts";
+import MarkerHoverCard from "./MarkerHoverCard.tsx";
 
-interface Spot {
-  id: number;
-  name: string;
-  description: string;
-  city: string;
-  country: string;
-  latitude: number;
-  longitude: number;
-  owner_id: number;
-}
+import type { SpotRead } from "../interfaces/ISpotRead";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
-async function getSpots(): Promise<Spot[]> {
-  const res = await apiClient.get<Spot[]>("spots").json();
-
+async function getSpots(): Promise<SpotRead[]> {
+  const res = await apiClient.get<SpotRead[]>("spots").json();
   return res;
 }
 
@@ -150,7 +142,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     map.addControl(new mapboxgl.NavigationControl());
 
     getSpots().then((spots) => {
-      spots.forEach((spot) => {
+      spots.forEach((spot: SpotRead) => {
         const el = document.createElement("div");
         el.id = "marker";
 
@@ -165,7 +157,13 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
           anchor: "bottom",
           maxWidth: "220px",
           className: "rounded-2xl popup-anim",
-        }).setText("Voir le ciel ici");
+        }).setDOMContent(
+          document
+            .createRange()
+            .createContextualFragment(
+              ReactDOMServer.renderToStaticMarkup(MarkerHoverCard(spot))
+            )
+        );
 
         hoverMarker.setPopup(hoverPopup);
         const hoverEl = hoverMarker.getElement();
