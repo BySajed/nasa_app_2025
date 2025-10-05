@@ -12,6 +12,7 @@ interface AuthContextType {
   isLoading: boolean;
   username: string | null;
   login: (username: string, password: string) => Promise<boolean>;
+  register: (username: string, password: string) => Promise<boolean>;
   logout: () => void;
   refreshAuth: () => void;
 }
@@ -63,6 +64,17 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
+  const register = async (username: string, password: string) => {
+    try {
+      await authApi.register({ username, password });
+      updateAuthState();
+      return true;
+    } catch (error) {
+      updateAuthState();
+      throw error;
+    }
+  };
+
   const logout = () => {
     authApi.logout();
     updateAuthState();
@@ -73,8 +85,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isLoading,
     username,
     login,
+    register,
     logout,
-    refreshAuth,
+    refreshAuth,  
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

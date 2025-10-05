@@ -1,14 +1,16 @@
 import { useState, type FormEvent } from "react";
 import { User, Lock, EyeOff, Eye } from "lucide-react";
 import { useAuth } from "../contexts/AuthContext";
+import Toast from "./Toast";
 
-const DialogLogin = () => {
+const DialogRegister = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const { login } = useAuth();
+  const [success, setSuccess] = useState<string | null>(null);
+  const { register } = useAuth();
 
   const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -16,10 +18,12 @@ const DialogLogin = () => {
     setError("");
 
     try {
-      await login(username, password);
-      console.log("Connection successful");
+      await register(username, password);
+      setSuccess("Registration successful");
 
-      const modal = document.getElementById("login_modal") as HTMLDialogElement;
+      const modal = document.getElementById(
+        "register_modal"
+      ) as HTMLDialogElement;
       if (modal) {
         modal.close();
       }
@@ -28,7 +32,7 @@ const DialogLogin = () => {
       setPassword("");
     } catch (err: unknown) {
       const errorMessage =
-        err instanceof Error ? err.message : "Error connecting";
+        err instanceof Error ? err.message : "Error registering";
       setError(errorMessage);
     } finally {
       setIsLoading(false);
@@ -37,7 +41,8 @@ const DialogLogin = () => {
 
   return (
     <>
-      <dialog id="login_modal" className="modal">
+      {success && <Toast message={success} type="success" />}
+      <dialog id="register_modal" className="modal">
         <div className="modal-box bg-white">
           <form method="dialog">
             <button className="btn btn-sm btn-circle btn-secondary absolute right-2 top-2">
@@ -60,10 +65,10 @@ const DialogLogin = () => {
 
           <div className="mb-8 text-center">
             <h1 className="mb-2 text-4xl font-bold text-gray-900">
-              Login to your account
+              Register to your account
             </h1>
             <p className="text-lg text-gray-500">
-              Enter your details to login.
+              Enter your details to register.
             </p>
           </div>
 
@@ -133,13 +138,17 @@ const DialogLogin = () => {
                 className="text-sm font-normal text-gray-700 underline hover:text-gray-900"
                 onClick={() => {
                   if (document) {
-                    const loginModal = document.getElementById("login_modal") as HTMLDialogElement;
-                    if (loginModal) loginModal.close();
-                    (document.getElementById("register_modal") as HTMLFormElement).showModal();
+                    const registerModal = document.getElementById(
+                      "register_modal"
+                    ) as HTMLDialogElement;
+                    if (registerModal) registerModal.close();
+                    (
+                      document.getElementById("login_modal") as HTMLFormElement
+                    ).showModal();
                   }
                 }}
               >
-                Sign up
+                Login
               </a>
             </div>
 
@@ -151,10 +160,10 @@ const DialogLogin = () => {
               {isLoading ? (
                 <>
                   <span className="loading loading-spinner loading-sm"></span>
-                  Connection...
+                  Registration...
                 </>
               ) : (
-                "Login"
+                "Register"
               )}
             </button>
           </form>
@@ -164,4 +173,4 @@ const DialogLogin = () => {
   );
 };
 
-export default DialogLogin;
+export default DialogRegister;

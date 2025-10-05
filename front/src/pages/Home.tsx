@@ -8,6 +8,7 @@ import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import Avatar from "../components/Avatar.tsx";
 import DialogLogin from "../components/DialogLogin.tsx";
 import { useAuth } from "../contexts/AuthContext";
+import DialogRegister from "../components/DialogRegister";
 
 function Home() {
   const [selectedVille, setSelectedVille] = useState<string | null>(null);
@@ -55,7 +56,20 @@ function Home() {
                     </button>
                   </li>
                   <li>
-                    <button className="btn btn-soft">Sign up</button>
+                    <button
+                      className="btn btn-soft"
+                      onClick={() => {
+                        if (document) {
+                          (
+                            document.getElementById(
+                              "register_modal"
+                            ) as HTMLFormElement
+                          ).showModal();
+                        }
+                      }}
+                    >
+                      Sign up
+                    </button>
                   </li>
                 </>
               ) : (
@@ -94,6 +108,7 @@ function Home() {
         <Map selectedCity={selectedVille} />
       </div>
       <DialogLogin />
+      <DialogRegister />
     </div>
   );
 }

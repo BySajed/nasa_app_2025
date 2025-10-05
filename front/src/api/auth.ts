@@ -10,6 +10,15 @@ export interface LoginResponse {
   token_type: string;
 }
 
+export interface RegisterCredentials {
+  username: string;
+  password: string;
+}
+
+export interface RegisterResponse {
+  message: string;
+}
+
 export interface AuthError {
   detail: string;
 }
@@ -37,9 +46,26 @@ export const authApi = {
     } catch (error: unknown) {
       if (error instanceof Response) {
         const errorData = (await error.json()) as AuthError;
-        throw new Error(errorData.detail || "Erreur de connexion");
+        throw new Error(errorData.detail || "Error connecting to the server");
       }
-      throw new Error("Erreur de connexion au serveur");
+      throw new Error("Error connecting to the server");
+    }
+  },
+
+  async register(credentials: RegisterCredentials): Promise<RegisterResponse> {
+    try {
+      const response = await apiClient
+        .post("auth/signup", {
+          json: credentials,
+        })
+        .json<RegisterResponse>();
+      return response;
+    } catch (error: unknown) {
+      if (error instanceof Response) {
+        const errorData = (await error.json()) as AuthError;
+        throw new Error(errorData.detail || "Error registering");
+      }
+      throw new Error("Error registering");
     }
   },
 
