@@ -13,13 +13,16 @@ export function SkyPage() {
   }, []);
 
   if (stars.length === 0) {
-  return (
-    <div className="flex flex-col items-center justify-center h-screen w-full">
-      <p className="text-2xl mb-6">Loading stars... 💫</p>
-      <div className="loading loading-spinner loading-lg text-primary"></div>
-    </div>
-  );
-}
+    return (
+      <div className="flex items-center justify-center h-screen w-full">
+        <img
+          src="NASA_logo.svg"
+          alt="NASA Logo"
+          className="w-1/2 h-1/2 animate-spin"
+        />
+      </div>
+    );
+  }
 
 
   return <Sky stars={stars} />;
