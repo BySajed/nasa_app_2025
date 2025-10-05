@@ -38,6 +38,41 @@ def _tle_age_hours(l1: str) -> Optional[float]:
     except Exception:
         return None
 
+def _orbit_from_tle(l2: str) -> dict:
+    """Extract minimal orbit info (period, inclination, type) from TLE line 2.
+
+    Line 2 columns (1-based):
+      9-16  Inclination (deg)
+      53-63 Mean Motion (rev/day)
+    """
+    try:
+        inc_deg = float(l2[8:16])
+    except Exception:
+        inc_deg = None
+    try:
+        mean_motion = float(l2[52:63])  # revs per day
+    except Exception:
+        mean_motion = None
+    period_min = 1440.0 / mean_motion if mean_motion and mean_motion > 0 else None
+
+    orb_type = None
+    if period_min:
+        # Simple heuristic classification
+        if period_min < 128:
+            orb_type = "LEO"
+        elif period_min < 800:
+            orb_type = "MEO"
+        elif period_min < 1500:
+            orb_type = "GEO"
+        else:
+            orb_type = "HIGH"
+
+    return {
+        "period_min": period_min,
+        "inclination_deg": inc_deg,
+        "type": orb_type
+    }
+
 def _mini_track_points(sat: EarthSatellite, observer: EarthLocation, start: datetime, step_s: int, count: int):
     """
     Generate 0/1/3 points:
@@ -122,7 +157,6 @@ def compute_above(
         range_rate = float(np.dot(vel_kms, pos_km / (range_km + 1e-12)))
 
         # ITRF pour AltAz
-        # Changed to pass frame argument (itrs) to frame_xyz per new Skyfield API
         itrf = geocentric.frame_xyz(itrs).km
         az, el = _to_altaz(itrf[0], itrf[1], itrf[2], observer, now)
         if not above_horizon(el):
@@ -138,6 +172,7 @@ def compute_above(
         x, y, z = alt_az_to_enu(el, az, float(range_km))
 
         mini_track = _mini_track_points(sat, observer, now, track_step_s, mini_count)
+        orbit_info = _orbit_from_tle(l2)
 
         objects.append({
             "kind": "satellite",
@@ -154,7 +189,7 @@ def compute_above(
             "props": {
                 "norad_id": norad_id,
                 "category": infer_category(name),
-                "orbit": None,
+                "orbit": orbit_info,
                 "tle_age_hours": _tle_age_hours(l1),
                 "altitude_km": altitude_km,
                 "speed_kms": speed_kms,
@@ -193,7 +228,6 @@ def compute_details(
         tt = ts.from_datetime(cur)
         geo = sat.at(tt)
         sp = wgs84.subpoint(geo)
-        # Changed to pass frame argument (itrs) to frame_xyz per new Skyfield API
         itrf = geo.frame_xyz(itrs).km
         az, el = _to_altaz(itrf[0], itrf[1], itrf[2], observer, cur)
 
@@ -211,7 +245,7 @@ def compute_details(
         ground_coords.append([float(sp.longitude.degrees), float(sp.latitude.degrees)])
         cur += timedelta(seconds=step_s)
 
-    orbit = {"period_min": None, "inclination_deg": None, "type": None}
+    orbit = _orbit_from_tle(l2)
     return {
         "object_id": f"SAT:{norad_id}",
         "kind": "satellite",
