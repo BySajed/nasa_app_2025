@@ -1,7 +1,6 @@
 import Map from "../components/Map";
 import SearchBar from "../components/SearchBar";
-import { useState } from "react";
-import type { Position } from "../interfaces/IPosition";
+import { useEffect, useState } from "react";
 import { usePositionHistory } from "../hooks/usePositionHistory";
 import CardHistoryPosition from "../components/CardHistoryPosition";
 import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
@@ -9,17 +8,36 @@ import Avatar from "../components/auth/Avatar.tsx";
 import DialogLogin from "../components/auth/DialogLogin.tsx";
 import { useAuth } from "../contexts/useAuthContext";
 import DialogRegister from "../components/auth/DialogRegister.tsx";
+import { apiClient } from "../api/client";
+import type { SpotRead } from "../interfaces/ISpotRead";
+
+const getSpots = async () => {
+  try {
+    const spots = await apiClient.get<SpotRead[]>("spots");
+    return spots.json();
+  } catch (error) {
+    console.error(error);
+    return [];
+  }
+};
 
 function Home() {
   const [selectedVille, setSelectedVille] = useState<string | null>(null);
   const { positions } = usePositionHistory();
+  const [spots, setSpots] = useState<SpotRead[]>([]);
   const navigateToSky = useNavigateToSky();
   const { isAuthenticated, logout, username } = useAuth();
 
-  function handleClick(pos: Position) {
-    console.log(pos);
-    navigateToSky(pos.lng, pos.lat);
+  function handleClick(lng: number, lat: number) {
+    console.log(lng, lat);
+    navigateToSky(lng, lat);
   }
+
+  useEffect(() => {
+    getSpots().then((spots) => {
+      setSpots(spots);
+    });
+  }, []);
 
   return (
     <div className="w-full min-h-screen grid grid-cols-3 grid-rows-1 bg-[#131517]">
@@ -104,12 +122,21 @@ function Home() {
               <CardHistoryPosition
                 key={pos.id}
                 {...pos}
-                onClick={() => handleClick(pos)}
+                onClick={() => handleClick(pos.lng, pos.lat)}
+              />
+            ))}
+            {spots.map((spot) => (
+              <CardHistoryPosition
+                id={spot.id.toString()}
+                lat={spot.latitude}
+                lng={spot.longitude}
+                timestamp={spot.created_at}
+                title={spot.owner.username}
+                onClick={() => handleClick(spot.longitude, spot.latitude)}
               />
             ))}
           </ul>
         </div>
-
       </div>
 
       <div className="w-full h-full col-span-2 overflow-hidden p-4">
