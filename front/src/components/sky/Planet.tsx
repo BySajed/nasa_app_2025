@@ -1,20 +1,38 @@
+import * as THREE from "three";
+import { useMemo } from "react";
+
 import type { Planet } from "../../api/stars";
 import { StarRender } from "./Star";
 import { scalePosition, sizeFromMagnitude } from "./utils";
-import { useMemo } from "react";
-import * as THREE from "three";
 
-export function Planets({ planets }: { planets: Planet[] }) {
+type PlanetsProps = {
+  planets: Planet[];
+  selectedPlanet?: Planet | null;
+  onSelect?: (planet: Planet) => void;
+};
+
+export function Planets({ planets, selectedPlanet = null, onSelect }: PlanetsProps) {
   return (
     <>
       {planets.map((planet) => (
-        <PlanetRender key={planet.name} planet={planet} />
+        <PlanetRender
+          key={planet.name}
+          planet={planet}
+          isSelected={selectedPlanet?.name === planet.name}
+          onSelect={onSelect}
+        />
       ))}
     </>
   );
 }
 
-function PlanetRender({ planet }: { planet: Planet }) {
+type PlanetRenderProps = {
+  planet: Planet;
+  isSelected: boolean;
+  onSelect?: (planet: Planet) => void;
+};
+
+function PlanetRender({ planet, isSelected, onSelect }: PlanetRenderProps) {
   const baseColor = colorFromPlanet(planet.name);
 
   const texture = useMemo(() => {
@@ -87,9 +105,50 @@ function PlanetRender({ planet }: { planet: Planet }) {
       position={scalePosition([planet.x, planet.y, planet.z])}
       size={sizeFromMagnitude(planet.magnitude)}
       color={baseColor}
-      isConstellationSelected={false}
+      isConstellationSelected={isSelected}
       map={texture}
+      onClick={() => onSelect?.(planet)}
     />
+  );
+}
+
+type PlanetDetailsPanelProps = {
+  planet: Planet;
+  onClose: () => void;
+};
+
+export function PlanetDetailsPanel({ planet, onClose }: PlanetDetailsPanelProps) {
+  return (
+    <div className="absolute top-4 right-4 w-80 max-h-[80vh] overflow-auto bg-black/80 text-white p-4 rounded shadow-xl border border-white/20 backdrop-blur">
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <h2 className="font-semibold text-sm leading-tight">
+          {planet.name}
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-xs px-2 py-1 bg-white/10 rounded hover:bg-white/20"
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="text-xs space-y-1">
+        <p>
+          Magnitude: <span className="font-medium">{planet.magnitude.toFixed(2)}</span>
+        </p>
+        <p>
+          Visible: {planet.is_visible ? "Yes" : "No"}
+        </p>
+        <div className="pt-2 border-t border-white/10 space-y-1">
+          <p className="opacity-70 text-[11px] leading-tight">
+            Position (ENU km):
+          </p>
+          <p className="font-mono text-[11px] opacity-80">
+            x: {planet.x.toFixed(1)} · y: {planet.y.toFixed(1)} · z: {planet.z.toFixed(1)}
+          </p>
+        </div>
+      </div>
+    </div>
   );
 }
 

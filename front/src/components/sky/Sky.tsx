@@ -6,7 +6,7 @@ import type { SatelliteObject } from "../../api/satellites";
 import { useMemo, useState } from "react";
 import { scalePosition } from "./utils";
 import { useCamera } from "./useCamera";
-import { Planets } from "./Planet";
+import { Planets, PlanetDetailsPanel } from "./Planet";
 import type { Planet, Star } from "../../api/stars";
 
 export function Sky({
@@ -28,6 +28,9 @@ export function Sky({
   const [selectedStar, setSelectedStar] =
     useState<Star | null>(null);
 
+  const [selectedPlanet, setSelectedPlanet] =
+    useState<Planet | null>(null);
+
   const skySphereRadius = useMemo(() => {
     const sample = stars.find((star) => !!star);
     if (!sample) {
@@ -40,11 +43,19 @@ export function Sky({
   function handleSelectSatellite(sat: SatelliteObject) {
     setSelectedSatellite(sat);
     setSelectedStar(null);
+    setSelectedPlanet(null);
   }
 
   function handleSelectStar(star: Star) {
     setSelectedStar(star);
     setSelectedSatellite(null);
+    setSelectedPlanet(null);
+  }
+
+  function handleSelectPlanet(planet: Planet) {
+    setSelectedPlanet(planet);
+    setSelectedSatellite(null);
+    setSelectedStar(null);
   }
 
   return (
@@ -68,7 +79,11 @@ export function Sky({
           displayRadius={skySphereRadius}
           onSelect={handleSelectSatellite}
         />
-        <Planets planets={planets} />
+        <Planets
+          planets={planets}
+          selectedPlanet={selectedPlanet}
+          onSelect={handleSelectPlanet}
+        />
       </Canvas>
 
       {selectedSatellite && observer && (
@@ -83,6 +98,13 @@ export function Sky({
         <StarDetailsPanel
           star={selectedStar}
           onClose={() => setSelectedStar(null)}
+        />
+      )}
+
+      {selectedPlanet && (
+        <PlanetDetailsPanel
+          planet={selectedPlanet}
+          onClose={() => setSelectedPlanet(null)}
         />
       )}
     </div>
