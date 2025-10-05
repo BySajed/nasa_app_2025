@@ -136,9 +136,6 @@ export function PlanetDetailsPanel({ planet, onClose }: PlanetDetailsPanelProps)
         <p>
           Magnitude: <span className="font-medium">{planet.magnitude.toFixed(2)}</span>
         </p>
-        <p>
-          Visible: {planet.is_visible ? "Yes" : "No"}
-        </p>
         <div className="pt-2 border-t border-white/10 space-y-1">
           <p className="opacity-70 text-[11px] leading-tight">
             Position (ENU km):
