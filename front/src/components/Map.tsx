@@ -151,7 +151,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
           .addTo(map);
 
         const hoverPopup = new mapboxgl.Popup({
-          offset: 16,
+          offset: 25,
           closeButton: false,
           closeOnClick: false,
           anchor: "bottom",
