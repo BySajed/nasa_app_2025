@@ -13,7 +13,7 @@ import { Trash2Icon } from "lucide-react";
 
 const getSpots = async () => {
   try {
-    const spots = await apiClient.get<SpotRead[]>("spots");
+    const spots = await apiClient.get<SpotRead[]>("spots/");
     return spots.json();
   } catch (error) {
     console.error(error);

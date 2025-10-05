@@ -2,7 +2,7 @@ import { apiClient } from "../../api/client";
 
 const postSpot = async (lng: number, lat: number, onCreated: () => void) => {
   try {
-    const response = await apiClient.post("spots", {
+    const response = await apiClient.post("spots/", {
       json: { latitude: lat, longitude: lng },
     });
     onCreated();
