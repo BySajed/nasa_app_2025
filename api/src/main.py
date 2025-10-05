@@ -3,8 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.middleware.cors import CORSMiddleware
-
-from .routers import sky, objects, weather, moon
+from .routers import sky, objects, weather, moon, auth
 from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
 from .dependencies.settings import settings
 
@@ -45,6 +44,7 @@ app.add_middleware(
 app.include_router(weather.router)
 app.include_router(moon.router)
 app.include_router(sky.router)
+app.include_router(auth.router)
 app.include_router(objects.router)
 
 @app.get("/health")

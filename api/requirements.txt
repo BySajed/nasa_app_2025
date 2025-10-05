@@ -14,3 +14,7 @@ astroquery
 requests
 python-dotenv
 jplephem
+sqlmodel
+passlib
+python-jose[cryptography]
+bcrypt==4.3.0

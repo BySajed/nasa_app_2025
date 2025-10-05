@@ -13,8 +13,14 @@ export function SkyPage() {
   }, []);
 
   if (stars.length === 0) {
-    return <div className="loading loading-spinner loading-md"></div>;
-  }
+  return (
+    <div className="flex flex-col items-center justify-center h-screen w-full">
+      <p className="text-2xl mb-6">Loading stars... 💫</p>
+      <div className="loading loading-spinner loading-lg text-primary"></div>
+    </div>
+  );
+}
+
 
   return <Sky stars={stars} />;
 }

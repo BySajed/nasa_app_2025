@@ -9,6 +9,7 @@ on:
 env:
   VITE_MAPBOX_ACCESS_TOKEN: ${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}
   VITE_API_URL: ${{ secrets.VITE_API_URL }}
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,14 +32,15 @@ jobs:
       - name: Create .env file
         run: |
           touch ./front/.env
-          echo "${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}" >> ./front/.env
-          echo "${{ secrets.VITE_API_URL }}" >> ./front/.env
+          echo "VITE_MAPBOX_ACCESS_TOKEN=${{ secrets.VITE_MAPBOX_ACCESS_TOKEN }}" >> ./front/.env
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> ./front/.env
 
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
           context: ./front
           push: true
+          secrets: "env_file=./front/.env"
           tags: ${{ secrets.DOCKERHUB_USERNAME }}/expedition25:front
 
       - name: Redeploy
