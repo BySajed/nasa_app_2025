@@ -1,6 +1,6 @@
 import { useState, type FormEvent } from "react";
 import { User, Lock, EyeOff, Eye } from "lucide-react";
-import { useAuth } from "../contexts/useAuthContext";
+import { useAuth } from "../../contexts/useAuthContext";
 
 const DialogLogin = () => {
   const [username, setUsername] = useState("");

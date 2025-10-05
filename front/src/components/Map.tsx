@@ -9,8 +9,8 @@ import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import { usePositionHistory } from "../hooks/usePositionHistory.ts";
 import { apiClient } from "../api/client.ts";
 import MarkerHoverCard from "./spots/MarkerHoverCard.tsx";
-
 import type { SpotRead } from "../interfaces/ISpotRead";
+import CreateSpotButton from "./spots/CreateSpotButton.tsx";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 
@@ -97,24 +97,27 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     if (!markerRef.current) return;
     const btn = document.createElement("button");
     btn.className =
-      "btn btn-secondary w-full text-white font-semibold px-4 py-2 rounded-md";
-    btn.textContent = "Voir le ciel ici";
+      "btn btn-secondary btn-sm text-white font-semibold px-4 py-2 rounded-md";
+    btn.textContent = "View the sky here";
     btn.onclick = (e) => {
+      console.log("btn.onclick", lng, lat);
       e.preventDefault();
       e.stopPropagation();
       flyToAndNavigate(lng, lat);
     };
 
     const wrapper = document.createElement("div");
-    wrapper.className = "flex flex-col items-center";
+    wrapper.className = "flex flex-col items-center gap-2";
     if (address) {
       const p = document.createElement("p");
       p.className = "text-neutral font-semibold mb-2 align-center text-md";
       p.textContent = address;
       wrapper.appendChild(p);
     }
-    wrapper.appendChild(btn);
-    wrapper.appendChild(btn);
+    const buttonWrapper = document.createElement("div");
+    buttonWrapper.className = "w-full flex flex-row items-center gap-2";
+    buttonWrapper.appendChild(btn);
+    wrapper.appendChild(buttonWrapper);
 
     markerRef.current
       .setPopup(
@@ -128,6 +131,11 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
         }).setDOMContent(wrapper)
       )
       .togglePopup();
+    const createSpotDiv = document.createElement("div");
+    createSpotDiv.innerHTML = ReactDOMServer.renderToString(
+      <CreateSpotButton lng={lng} lat={lat} />
+    );
+    buttonWrapper.appendChild(createSpotDiv.firstChild as Node);
   }
 
   useEffect(() => {
