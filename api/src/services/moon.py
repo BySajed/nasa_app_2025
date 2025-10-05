@@ -2,7 +2,6 @@ import requests
 import os
 from datetime import datetime
 
-
 class MoonService:
     base_url = "https://moon-phase.p.rapidapi.com"
 
