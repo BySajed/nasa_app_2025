@@ -130,7 +130,7 @@ function isCameraClose(
     return closePos && closeZoom;
 }
 
-const Map: React.FC<MapProps> = ({selectedCity}) => {
+const Map: React.FC<MapProps> = ({selectedCity, externalTarget}) => {
     const wrapperRef = useRef<HTMLDivElement | null>(null);
     const mapContainerRef = useRef<HTMLDivElement | null>(null);
     const mapRef = useRef<mapboxgl.Map | null>(null);
@@ -511,6 +511,13 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             flyToAndNavigate(lng, lat, 12.5);
         });
     }, [selectedCity]);
+
+  useEffect(() => {
+    if (!externalTarget || !mapRef.current) return;
+    const { lng, lat, zoom } = externalTarget;
+    ensureMarker(lng, lat);
+    flyToAndNavigate(lng, lat, zoom ?? 13.5);
+  }, [externalTarget]);
 
     return (
         <div

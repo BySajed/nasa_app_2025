@@ -3,7 +3,6 @@ import SearchBar from "../components/SearchBar";
 import { useEffect, useState } from "react";
 import { usePositionHistory } from "../hooks/usePositionHistory";
 import CardHistoryPosition from "../components/CardHistoryPosition";
-import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import Avatar from "../components/auth/Avatar.tsx";
 import DialogLogin from "../components/auth/DialogLogin.tsx";
 import { useAuth } from "../contexts/useAuthContext";
@@ -23,20 +22,29 @@ const getSpots = async () => {
 
 function Home() {
   const [selectedVille, setSelectedVille] = useState<string | null>(null);
+  const [externalTarget, setExternalTarget] = useState<{
+    lng: number;
+    lat: number;
+    zoom?: number;
+  } | null>(null);
   const { positions } = usePositionHistory();
   const [spots, setSpots] = useState<SpotRead[]>([]);
-  const navigateToSky = useNavigateToSky();
+  const [isLoadingSpots, setIsLoadingSpots] = useState<boolean>(true);
+
   const { isAuthenticated, logout, username } = useAuth();
 
   function handleClick(lng: number, lat: number) {
     console.log(lng, lat);
-    navigateToSky(lng, lat);
+    setExternalTarget({ lng, lat, zoom: 13.5 });
   }
 
   useEffect(() => {
-    getSpots().then((spots) => {
-      setSpots(spots);
-    });
+    setIsLoadingSpots(true);
+    getSpots()
+      .then((spots) => {
+        setSpots(spots);
+      })
+      .finally(() => setIsLoadingSpots(false));
   }, []);
 
   return (
@@ -118,6 +126,18 @@ function Home() {
               pr-2                       
             "
           >
+            {isLoadingSpots && (
+              <>
+                {[...Array(3)].map((_, i) => (
+                  <li key={`skeleton-${i}`} className="w-full">
+                    <div className="animate-pulse flex flex-col gap-2 p-3 rounded-lg bg-white/5">
+                      <div className="h-4 bg-white/20 rounded w-1/2" />
+                      <div className="h-3 bg-white/10 rounded w-2/3" />
+                    </div>
+                  </li>
+                ))}
+              </>
+            )}
             {positions.map((pos) => (
               <CardHistoryPosition
                 key={pos.id}
@@ -125,23 +145,24 @@ function Home() {
                 onClick={() => handleClick(pos.lng, pos.lat)}
               />
             ))}
-            {spots.map((spot) => (
-              <CardHistoryPosition
-                id={spot.id.toString()}
-                lat={spot.latitude}
-                lng={spot.longitude}
-                timestamp={spot.created_at}
-                title={`📍 Spot de ${spot.owner.username} #${spot.id}`}
-                description={`Spot enregistré`}
-                onClick={() => handleClick(spot.longitude, spot.latitude)}
-              />
-            ))}
+            {!isLoadingSpots &&
+              spots.map((spot) => (
+                <CardHistoryPosition
+                  id={spot.id.toString()}
+                  lat={spot.latitude}
+                  lng={spot.longitude}
+                  timestamp={spot.created_at}
+                  title={`📍 Spot de ${spot.owner.username} #${spot.id}`}
+                  description={`Spot enregistré`}
+                  onClick={() => handleClick(spot.longitude, spot.latitude)}
+                />
+              ))}
           </ul>
         </div>
       </div>
 
       <div className="w-full h-full col-span-2 overflow-hidden p-4">
-        <Map selectedCity={selectedVille} />
+        <Map selectedCity={selectedVille} externalTarget={externalTarget} />
       </div>
       <DialogLogin />
       <DialogRegister />
