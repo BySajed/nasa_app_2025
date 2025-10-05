@@ -18,7 +18,7 @@ export function SkyPage() {
         <img
           src="NASA_logo.svg"
           alt="NASA Logo"
-          className="w-1/2 h-1/2 animate-spin"
+          className="spin-twice"
         />
       </div>
     );
