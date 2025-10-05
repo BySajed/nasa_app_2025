@@ -44,7 +44,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
 
-origins = ["http://localhost:5173", "https://expedition25.dixen.fr"]
+origins = ["http://localhost:5173", "https://skyexplorer.dixen.fr"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -55,9 +55,9 @@ app.add_middleware(
 )
 
 
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
+@app.head("/")
+async def ping():
+    return
 
 
 app.include_router(weather.router)
@@ -66,8 +66,3 @@ app.include_router(sky.router)
 app.include_router(auth.router)
 app.include_router(objects.router)
 app.include_router(spots.router)
-
-
-@app.get("/health")
-async def health():
-    return {"status": "ok"}

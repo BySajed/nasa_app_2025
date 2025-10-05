@@ -45,6 +45,7 @@ async def sky_above(
 
 @router.get("/stars")
 def get_stars(lat: float, lon: float, height: float = 0, time: Optional[str] = None):
+    print(f"Received request for stars at lat={lat}, lon={lon}, height={height}, time={time}")
 
     if time:
         time = datetime.fromisoformat(time)

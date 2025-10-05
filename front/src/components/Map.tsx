@@ -1,14 +1,30 @@
 import React, {useEffect, useRef} from "react";
+import ReactDOMServer from "react-dom/server";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import type {LightIntensity, MapProps, Weather, WeatherApiResponse, WeatherMode} from "../interfaces/IMap";
+import type {
+    LightIntensity,
+    MapProps,
+    Weather,
+    WeatherApiResponse,
+    WeatherMode,
+} from "../interfaces/IMap";
 import pinUrl from "../assets/marker.svg";
 import {forwardGeocode, reverseGeocode} from "../lib/geocoding";
 import {useNavigateToSky} from "../hooks/useNavigateToSky.ts";
 import {usePositionHistory} from "../hooks/usePositionHistory.ts";
+import {apiClient} from "../api/client.ts";
+import MarkerHoverCard from "./spots/MarkerHoverCard.tsx";
+import type {SpotRead} from "../interfaces/ISpotRead";
+import CreateSpotButton from "./spots/CreateSpotButton.tsx";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 const WEATHER_API_BASE = import.meta.env.VITE_API_URL as string | undefined;
+
+async function getSpots(): Promise<SpotRead[]> {
+    const res = await apiClient.get<SpotRead[]>("spots").json();
+    return res;
+}
 
 function createMarkerElement(): HTMLElement {
     const el = document.createElement("div");
@@ -29,7 +45,7 @@ function minutesDiff(a: Date, b: Date) {
 function deriveLightFromSunTimes(
     currentIso: string,
     sunriseIso?: string,
-    sunsetIso?: string,
+    sunsetIso?: string
 ): LightIntensity {
     try {
         if (!sunriseIso || !sunsetIso) {
@@ -47,11 +63,9 @@ function deriveLightFromSunTimes(
         if (minsFromSunrise < -WINDOW || minsToSunset < -WINDOW) {
             return "Night";
         }
-
         if (Math.abs(minsFromSunrise) <= WINDOW && minsFromSunrise >= -WINDOW) {
             return "Dawn";
         }
-
         if (Math.abs(minsToSunset) <= WINDOW && minsToSunset >= -WINDOW) {
             return "Dusk";
         }
@@ -69,7 +83,8 @@ function isCameraClose(
 ): boolean {
     const {lng, lat} = map.getCenter();
     const z = map.getZoom();
-    const closePos = Math.abs(lng - targetLng) < 0.0005 && Math.abs(lat - targetLat) < 0.0005;
+    const closePos =
+        Math.abs(lng - targetLng) < 0.0005 && Math.abs(lat - targetLat) < 0.0005;
     const closeZoom = z >= targetZoom - 0.05;
     return closePos && closeZoom;
 }
@@ -102,44 +117,45 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         }
     }
 
-    async function requestForWeather(lat: number, lng: number): Promise<WeatherApiResponse | null> {
-        if (!WEATHER_API_BASE) return Promise.resolve(null);
+    async function requestForWeather(
+        lat: number,
+        lng: number
+    ): Promise<WeatherApiResponse | null> {
+        if (!WEATHER_API_BASE) return null;
         const url = `${WEATHER_API_BASE}weather?latitude=${lat}&longitude=${lng}`;
-        console.log("Fetching weather", url);
         try {
             const res = await fetch(url, {headers: {accept: "application/json"}});
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            return await (await res.json() as Promise<WeatherApiResponse>);
-        } catch (e : Error | unknown) {
-            console.error("requestForWeather :" + e, url);
+            const json = (await res.json()) as WeatherApiResponse;
+            return json;
+        } catch (e) {
+            console.error("requestForWeather :", e, url);
             return null;
         }
-
     }
 
     async function getWeatherFromData(
         lat: number,
         lng: number
-    ): Promise<["off" | "rain" | "snow", "Dawn" | "Dusk" | "Day" | "Night"]> {
+    ): Promise<[Weather, LightIntensity]> {
         if (!WEATHER_API_BASE) return ["off", "Day"];
-        console.log("Fetching weather 2 ");
         const data = await requestForWeather(lat, lng);
-        console.log("Weather data", data);
         if (!data) return ["off", "Day"];
 
         const c = data.current;
         if (!c) return ["off", "Day"];
 
         const hasSnow = (c.snowfall ?? 0) > 0;
-        const hasRain = (c.rain ?? 0) > 0 || (c.showers ?? 0) > 0 || (c.precipitation ?? 0) > 0.2;
+        const hasRain =
+            (c.rain ?? 0) > 0 ||
+            (c.showers ?? 0) > 0 ||
+            (c.precipitation ?? 0) > 0.2;
 
         const weather: Weather = hasSnow ? "snow" : hasRain ? "rain" : "off";
 
         let light: LightIntensity = "Day";
         const curDate = (c.time || "").slice(0, 10);
-
-        const idx =
-            data.daily?.time?.findIndex((d) => d === curDate) ?? -1;
+        const idx = data.daily?.time?.findIndex((d) => d === curDate) ?? -1;
 
         if (
             idx !== -1 &&
@@ -149,22 +165,24 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             light = deriveLightFromSunTimes(
                 c.time,
                 data.daily.sunrise[idx],
-                data.daily.sunset[idx],
+                data.daily.sunset[idx]
             );
         } else {
             light = c.is_day === 1 ? "Day" : "Night";
         }
 
         return [weather, light];
-
     }
-
     function applyLight(light: LightIntensity) {
         if (!mapRef.current || !styleLoadedRef.current) return;
         const preset = light.toLowerCase();
         mapRef.current.setConfigProperty("basemap", "lightPreset", preset);
         mapRef.current.setConfigProperty("basemap", "showPlaceLabels", true);
-        mapRef.current.setConfigProperty("basemap", "showPointOfInterestLabels", true);
+        mapRef.current.setConfigProperty(
+            "basemap",
+            "showPointOfInterestLabels",
+            true
+        );
         mapRef.current.setConfigProperty("basemap", "showRoadLabels", true);
         mapRef.current.setConfigProperty("basemap", "showTransitLabels", true);
     }
@@ -172,6 +190,7 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
     function applyWeather(mode: WeatherMode) {
         if (!mapRef.current || !styleLoadedRef.current) return;
         const m = mapRef.current;
+
         if (mode === "rain") {
             m.setSnow({
                 density: 0,
@@ -181,7 +200,7 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 "center-thinning": 0.4,
                 direction: [0, 50],
                 "flake-size": 0.71,
-                vignette: 0.3
+                vignette: 0.3,
             });
             m.setRain({
                 density: 1,
@@ -204,7 +223,7 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 direction: [0, 50],
                 "droplet-size": [1, 10],
                 "distortion-strength": 0.5,
-                vignette: 0.5
+                vignette: 0.5,
             });
             m.setSnow({
                 density: 0.85,
@@ -226,7 +245,7 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 direction: [0, 50],
                 "droplet-size": [1, 10],
                 "distortion-strength": 0.5,
-                vignette: 0.5
+                vignette: 0.5,
             });
             m.setSnow({
                 density: 0,
@@ -236,7 +255,7 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 "center-thinning": 0.4,
                 direction: [0, 50],
                 "flake-size": 0.71,
-                vignette: 0.3
+                vignette: 0.3,
             });
         }
     }
@@ -251,28 +270,43 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             return;
         }
         map.once("moveend", () => navigateToSky(lat, lng));
-        map.flyTo({center: [lng, lat], zoom, speed: 0.8, curve: 1.4, duration: 1200, essential: true});
+        map.flyTo({
+            center: [lng, lat],
+            zoom,
+            speed: 0.8,
+            curve: 1.4,
+            duration: 1200,
+            essential: true,
+        });
     }
 
-    function attachMarkerPopup(lng: number, lat: number, address?: string | null) {
+    function attachMarkerPopup(
+        lng: number,
+        lat: number,
+        address?: string | null
+    ) {
         if (!markerRef.current) return;
         const btn = document.createElement("button");
-        btn.className = "btn btn-primary text-white font-semibold px-4 py-2 rounded-md";
-        btn.textContent = "Voir le ciel ici";
+        btn.className =
+            "btn btn-secondary btn-sm text-white font-semibold px-4 py-2 rounded-md";
+        btn.textContent = "View the sky here";
         btn.onclick = (e) => {
             e.preventDefault();
             e.stopPropagation();
             flyToAndNavigate(lng, lat);
         };
         const wrapper = document.createElement("div");
-        wrapper.className = "flex flex-col items-center";
+        wrapper.className = "flex flex-col items-center gap-2";
         if (address) {
             const p = document.createElement("p");
             p.className = "text-neutral font-semibold mb-2 align-center text-md";
             p.textContent = address;
             wrapper.appendChild(p);
         }
-        wrapper.appendChild(btn);
+        const buttonWrapper = document.createElement("div");
+        buttonWrapper.className = "w-full flex flex-row items-center gap-2";
+        buttonWrapper.appendChild(btn);
+        wrapper.appendChild(buttonWrapper);
         markerRef.current
             .setPopup(
                 new mapboxgl.Popup({
@@ -285,6 +319,12 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 }).setDOMContent(wrapper)
             )
             .togglePopup();
+
+        const createSpotDiv = document.createElement("div");
+        createSpotDiv.innerHTML = ReactDOMServer.renderToString(
+            <CreateSpotButton lng={lng} lat={lat}/>
+        );
+        buttonWrapper.appendChild(createSpotDiv.firstChild as Node);
     }
 
     function updateOverlay(
@@ -295,7 +335,11 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         light?: LightIntensity
     ) {
         if (!overlayRef.current) return;
-        const parts = [`Lng: ${lng.toFixed(5)}`, `Lat: ${lat.toFixed(5)}`, `Zoom: ${zoom.toFixed(2)}`];
+        const parts = [
+            `Lng: ${lng.toFixed(5)}`,
+            `Lat: ${lat.toFixed(5)}`,
+            `Zoom: ${zoom.toFixed(2)}`,
+        ];
         if (zoom >= 15) {
             if (weather) parts.push(`Weather: ${weather}`);
             if (light) parts.push(`Light: ${light}`);
@@ -303,7 +347,10 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         overlayRef.current.textContent = parts.join("  •  ");
     }
 
-    async function handleZoomLevel(zoom: number, center: { lng: number; lat: number }) {
+    async function handleZoomLevel(
+        zoom: number,
+        center: { lng: number; lat: number }
+    ) {
         updateOverlay(center.lng, center.lat, zoom);
         if (lastWeatherFetchTimer.current) {
             window.clearTimeout(lastWeatherFetchTimer.current);
@@ -318,10 +365,15 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
                 updateOverlay(center.lng, center.lat, zoom);
                 return;
             }
-            console.log("Fetching weather");
-            const [weatherFromApi, lightFromApi] = await getWeatherFromData(center.lat, center.lng);
+
+            const [weatherFromApi, lightFromApi] = await getWeatherFromData(
+                center.lat,
+                center.lng
+            );
+
             const finalWeather = weatherFromApi;
             const finalLight = lightFromApi;
+
             weatherModeRef.current = finalWeather;
             lightRef.current = finalLight;
             applyWeather(finalWeather);
@@ -339,9 +391,55 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             center: [2.3522, 48.8566],
             zoom: 2.3,
             pitch: 0,
-            bearing: 0
+            bearing: 0,
         });
         map.addControl(new mapboxgl.NavigationControl());
+
+        getSpots().then((spots) => {
+            spots.forEach((spot: SpotRead) => {
+                const el = document.createElement("div");
+                el.id = "marker";
+
+                const hoverMarker = new mapboxgl.Marker(el)
+                    .setLngLat([spot.longitude, spot.latitude])
+                    .addTo(map);
+
+                const hoverPopup = new mapboxgl.Popup({
+                    offset: 25,
+                    closeButton: false,
+                    closeOnClick: false,
+                    anchor: "bottom",
+                    maxWidth: "220px",
+                    className: "rounded-2xl popup-anim",
+                }).setDOMContent(
+                    document
+                        .createRange()
+                        .createContextualFragment(
+                            ReactDOMServer.renderToStaticMarkup(<MarkerHoverCard {...spot} />
+                            ))
+                );
+
+                hoverMarker.setPopup(hoverPopup);
+                const hoverEl = hoverMarker.getElement();
+                hoverEl.addEventListener("mouseenter", () => {
+                    if (!hoverPopup.isOpen()) hoverMarker.togglePopup();
+                });
+                hoverEl.addEventListener("mouseleave", () => {
+                    if (!hoverPopup.isOpen()) return;
+                    const elPopup = hoverPopup.getElement();
+                    if (elPopup) {
+                        elPopup.classList.add("popup-anim-out");
+                        setTimeout(() => {
+                            if (hoverPopup.isOpen()) hoverMarker.togglePopup();
+                            elPopup.classList.remove("popup-anim-out");
+                        }, 150);
+                    } else {
+                        hoverMarker.togglePopup();
+                    }
+                });
+            });
+        });
+
         mapRef.current = map;
 
         map.on("style.load", () => {
@@ -356,7 +454,13 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             const c = map.getCenter();
             const z = map.getZoom();
             const show = z >= 15;
-            updateOverlay(c.lng, c.lat, z, show ? weatherModeRef.current : undefined, show ? lightRef.current : undefined);
+            updateOverlay(
+                c.lng,
+                c.lat,
+                z,
+                show ? weatherModeRef.current : undefined,
+                show ? lightRef.current : undefined
+            );
         });
 
         map.on("moveend", () => {
