@@ -104,6 +104,7 @@ class Star:
             "earth_distance_ly": self.earth_dist_light_years,
             "color": self.kelvin_to_hex(self.temp_kelvin) if self.temp_kelvin else "#ffffff",
             "constellation": self.constellation,
+            "temperature_kelvin": self.temp_kelvin,
         }
 
     def to_ENU(
