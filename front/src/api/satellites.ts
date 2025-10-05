@@ -101,17 +101,14 @@ export interface SatelliteDetailsResponse {
   };
 }
 
-export async function getSatelliteDetails(
-  norad_id: number,
-  params: {
-    lat: number;
-    lon: number;
-    alt_m?: number;
-    time_from?: string; // ISO
-    time_to?: string; // ISO
-    stepSec?: number;
-  }
-): Promise<SatelliteDetailsResponse> {
+export async function getSatelliteDetails(norad_id: number, params: {
+  lat: number;
+  lon: number;
+  alt_m?: number;
+  time_from?: string; // ISO
+  time_to?: string; // ISO
+  stepSec?: number;
+}): Promise<SatelliteDetailsResponse> {
   const { lat, lon, alt_m, time_from, time_to, stepSec } = params;
   const res = await apiClient
     .get<SatelliteDetailsResponse>(`objects/satellite/${norad_id}/details`, {
@@ -127,3 +124,4 @@ export async function getSatelliteDetails(
     .json();
   return res;
 }
+
