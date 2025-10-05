@@ -10,12 +10,14 @@ export const useDrag = (listener: (dx: number, dy: number) => void) => {
   const [lastY, setLastY] = useState(0);
 
   const onMouseDown = (event: React.MouseEvent) => {
+    if (event.button !== 0) return; // only left click
     setIsDragging(true);
     setLastX(event.clientX);
     setLastY(event.clientY);
   };
 
   const onMouseMove = (event: React.MouseEvent) => {
+    if (event.button !== 0) return; // only left click
     if (isDragging) {
       const dx = event.clientX - lastX;
       const dy = event.clientY - lastY;
@@ -25,11 +27,13 @@ export const useDrag = (listener: (dx: number, dy: number) => void) => {
     }
   };
 
-  const onMouseUp = () => {
+  const onMouseUp = (event: React.MouseEvent) => {
+    if (event.button !== 0) return; // only left click
     setIsDragging(false);
   };
 
-  const onMouseLeave = () => {
+  const onMouseLeave = (event: React.MouseEvent) => {
+    if (event.button !== 0) return; // only left click
     setIsDragging(false);
   };
   return { onMouseDown, onMouseMove, onMouseUp, onMouseLeave };

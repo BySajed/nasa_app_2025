@@ -21,6 +21,8 @@ export function Sky({ stars }: { stars: Star[] }) {
   }
 
   const canvasProps = useDrag(onDrag);
+
+  console.log(stars.map((s) => s.color + "\n"));
   return (
     <div className="w-screen h-screen">
       <Canvas
@@ -37,7 +39,6 @@ export function Sky({ stars }: { stars: Star[] }) {
       >
         <CameraController rotation={rotation} />
         <ambientLight />
-        <pointLight position={[10, 10, 10]} />
         {stars.map((star, i) => (
           <Star
             key={i}
@@ -46,6 +47,7 @@ export function Sky({ stars }: { stars: Star[] }) {
               console.log(star);
             }}
             size={sizeFromMagnitude(star.magnitude)}
+            color={star.color}
           />
         ))}
       </Canvas>
@@ -65,11 +67,11 @@ function CameraController({
   return null;
 }
 
-function Star(props: ThreeElements["mesh"] & { size: number }) {
+function Star(props: ThreeElements["mesh"] & { size: number; color: string }) {
   return (
     <mesh {...props}>
       <sphereGeometry args={[props.size, 32, 32]} />
-      <meshStandardMaterial color={"white"} />
+      <meshStandardMaterial color={props.color} />
     </mesh>
   );
 }
