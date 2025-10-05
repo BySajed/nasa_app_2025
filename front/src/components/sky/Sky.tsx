@@ -1,28 +1,12 @@
 import * as THREE from "three";
-import {
-  Canvas,
-  useFrame,
-  useThree,
-  type ThreeElements,
-} from "@react-three/fiber";
-import { useState } from "react";
-import {
-  baseRotation,
-  FOV_ANGLE,
-  updateCameraRotation,
-  useDrag,
-} from "./useDrag";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import type { Star } from "../../api/sky";
+import { Stars } from "./Star";
+import { useCamera } from "./useCamera";
 
 export function Sky({ stars }: { stars: Star[] }) {
-  const [rotation, setRotation] = useState(baseRotation);
-  function onDrag(dx: number, dy: number) {
-    setRotation((prev) => updateCameraRotation(prev, dx, dy));
-  }
+  const { canvasProps, cameraProps, rotation, zoom } = useCamera();
 
-  const canvasProps = useDrag(onDrag);
-
-  console.log(stars.map((s) => s.color + "\n"));
   return (
     <div className="w-screen h-screen">
       <Canvas
@@ -30,26 +14,11 @@ export function Sky({ stars }: { stars: Star[] }) {
         scene={{
           background: new THREE.Color(0x000000),
         }}
-        camera={{
-          fov: FOV_ANGLE,
-          isPerspectiveCamera: true,
-          rotation,
-          position: [0, 0, 0],
-        }}
+        camera={cameraProps}
       >
-        <CameraController rotation={rotation} />
+        <CameraController rotation={rotation} zoom={zoom} />
         <ambientLight />
-        {stars.map((star, i) => (
-          <Star
-            key={i}
-            position={scalePosition([star.x, star.y, star.z])}
-            onClick={() => {
-              console.log(star);
-            }}
-            size={sizeFromMagnitude(star.magnitude)}
-            color={star.color}
-          />
-        ))}
+        <Stars stars={stars} />
       </Canvas>
     </div>
   );
@@ -57,33 +26,17 @@ export function Sky({ stars }: { stars: Star[] }) {
 
 function CameraController({
   rotation,
+  zoom,
 }: {
   rotation: [number, number, number];
+  zoom: number;
 }) {
   const { camera } = useThree();
+  console.log("Camera zoom:", camera.zoom);
   useFrame(() => {
     camera.rotation.set(...rotation);
+    camera.zoom = zoom;
+    camera.updateProjectionMatrix();
   });
   return null;
-}
-
-function Star(props: ThreeElements["mesh"] & { size: number; color: string }) {
-  return (
-    <mesh {...props}>
-      <sphereGeometry args={[props.size, 32, 32]} />
-      <meshStandardMaterial color={props.color} />
-    </mesh>
-  );
-}
-
-function scalePosition([x, y, z]: [number, number, number]): [
-  number,
-  number,
-  number
-] {
-  return [x / 1000, y / 1000, z / 1000];
-}
-
-function sizeFromMagnitude(magnitude: number): number {
-  return Math.pow(2.512, -magnitude) * 20;
 }
