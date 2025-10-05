@@ -131,7 +131,8 @@ function Home() {
                 lat={spot.latitude}
                 lng={spot.longitude}
                 timestamp={spot.created_at}
-                title={spot.owner.username}
+                title={`📍 Spot de ${spot.owner.username} #${spot.id}`}
+                description={`Spot enregistré`}
                 onClick={() => handleClick(spot.longitude, spot.latitude)}
               />
             ))}
