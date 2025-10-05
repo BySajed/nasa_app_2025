@@ -1,4 +1,4 @@
-import type { SpotRead } from "../interfaces/ISpotRead";
+import type { SpotRead } from "../../interfaces/ISpotRead";
 
 const MarkerHoverCard = (spot: SpotRead) => {
   return (

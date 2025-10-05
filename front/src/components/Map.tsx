@@ -8,7 +8,7 @@ import { forwardGeocode, reverseGeocode } from "../lib/geocoding";
 import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import { usePositionHistory } from "../hooks/usePositionHistory.ts";
 import { apiClient } from "../api/client.ts";
-import MarkerHoverCard from "./MarkerHoverCard.tsx";
+import MarkerHoverCard from "./spots/MarkerHoverCard.tsx";
 
 import type { SpotRead } from "../interfaces/ISpotRead";
 
@@ -113,6 +113,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
       p.textContent = address;
       wrapper.appendChild(p);
     }
+    wrapper.appendChild(btn);
     wrapper.appendChild(btn);
 
     markerRef.current

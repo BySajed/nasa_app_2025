@@ -5,10 +5,10 @@ import type { Position } from "../interfaces/IPosition";
 import { usePositionHistory } from "../hooks/usePositionHistory";
 import CardHistoryPosition from "../components/CardHistoryPosition";
 import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
-import Avatar from "../components/Avatar.tsx";
-import DialogLogin from "../components/DialogLogin.tsx";
+import Avatar from "../components/auth/Avatar.tsx";
+import DialogLogin from "../components/auth/DialogLogin.tsx";
 import { useAuth } from "../contexts/useAuthContext";
-import DialogRegister from "../components/DialogRegister";
+import DialogRegister from "../components/auth/DialogRegister.tsx";
 
 function Home() {
   const [selectedVille, setSelectedVille] = useState<string | null>(null);
@@ -109,7 +109,6 @@ function Home() {
             ))}
           </ul>
         </div>
-
       </div>
 
       <div className="w-full h-full col-span-2 overflow-hidden p-4">
