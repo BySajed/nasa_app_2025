@@ -1,18 +1,18 @@
 @import "tailwindcss";
 @plugin "daisyui" {
-    themes: night --default, dark --prefersdark, sunset;
+  themes: night --default, dark --prefersdark, sunset;
 }
 
 .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
-    display: none;
+  display: none;
 }
 
 .mapboxgl-ctrl-logo {
-    display: none !important;
+  display: none !important;
 }
 
 mapbox-address-autofill {
-    width: 100%;
+  width: 100%;
 }
 
 @keyframes spin-slow-twice {
@@ -20,7 +20,7 @@ mapbox-address-autofill {
     transform: rotate(0deg);
   }
   100% {
-    transform: rotate(720deg); 
+    transform: rotate(720deg);
   }
 }
 
@@ -28,4 +28,53 @@ mapbox-address-autofill {
   width: 50%;
   height: 50%;
   animation: spin-slow-twice 15s linear infinite;
+}
+
+#marker {
+  background-image: url("https://cdn4.iconfinder.com/data/icons/small-n-flat/24/map-marker-512.png");
+  background-size: cover;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.mapboxgl-popup {
+  max-width: 200px;
+}
+
+/* Popup animation similar to Toast */
+@keyframes popupIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes popupOut {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+}
+
+.mapboxgl-popup.popup-anim .mapboxgl-popup-content,
+.mapboxgl-popup.popup-anim .mapboxgl-popup-tip {
+  transform-origin: bottom center;
+  animation: popupIn 150ms ease-out;
+  will-change: transform, opacity;
+}
+
+.mapboxgl-popup.popup-anim.popup-anim-out .mapboxgl-popup-content,
+.mapboxgl-popup.popup-anim.popup-anim-out .mapboxgl-popup-tip {
+  transform-origin: bottom center;
+  animation: popupOut 150ms ease-in forwards;
 }
