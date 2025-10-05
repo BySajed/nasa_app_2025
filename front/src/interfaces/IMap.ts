@@ -13,6 +13,8 @@ export type LightIntensity = "Dawn" | "Dusk" | "Day" | "Night";
 export type WeatherMode = "off" | "rain" | "snow";
 
 export type WeatherApiResponse = {
+    timezone?: string;
+    utc_offset_seconds?: number;
     current?: {
         time: string;
         temperature_2m: number;
@@ -23,5 +25,10 @@ export type WeatherApiResponse = {
         cloud_cover: number;
         snowfall: number;
         showers: number;
+    };
+    daily?: {
+        time: string[];
+        sunrise: string[];
+        sunset: string[];
     };
 };
