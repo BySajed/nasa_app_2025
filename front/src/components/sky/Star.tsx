@@ -2,7 +2,8 @@ import * as THREE from "three";
 import { type ThreeElements } from "@react-three/fiber";
 import type { Star } from "../../api/sky";
 import { useState } from "react";
-import { scalePosition } from "./utils";
+import { scalePosition, sizeFromMagnitude } from "./utils";
+
 export function Stars({ stars }: { stars: Star[] }) {
   const [selectedStar, setSelectedStar] = useState<Star | null>(null);
   const selectedConstellation = selectedStar?.constellation ?? null;
@@ -22,18 +23,19 @@ export function Stars({ stars }: { stars: Star[] }) {
     />
   ));
 }
+
 export function StarRender({
   size,
   color,
   isConstellationSelected,
+  map,
   ...props
 }: ThreeElements["mesh"] & {
   size: number;
   color: string;
   isConstellationSelected: boolean;
+  map?: THREE.Texture | null;
 }) {
-
-  // Convert hex or named color to THREE.Color
   const emissiveColor = new THREE.Color(color);
 
   return (
@@ -41,7 +43,10 @@ export function StarRender({
       <sphereGeometry args={[size, 32, 32]} />
       <meshStandardMaterial
         color={color}
-        emissive={isConstellationSelected ? emissiveColor : new THREE.Color(0x000000)}
+        map={map ?? undefined}
+        emissive={
+          isConstellationSelected ? emissiveColor : new THREE.Color(0x000000)
+        }
         emissiveIntensity={isConstellationSelected ? 1.5 : 0}
       />
 
@@ -88,6 +93,3 @@ function makeSpriteTexture(color: string) {
   return texture;
 }
 
-function sizeFromMagnitude(magnitude: number): number {
-  return Math.pow(2.512, -magnitude) * 20;
-}
