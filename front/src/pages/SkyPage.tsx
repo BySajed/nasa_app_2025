@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { getVisibleStars, type Star } from "../api/stars";
-import { getPlanets, type Planet } from "../api/sky";
+import { getPlanets, type Planet } from "../api/stars";
 import { Sky } from "../components/sky/Sky";
 import nasaLogo from "../assets/NASA_logo.svg";
 import { useLocation } from "react-router-dom";

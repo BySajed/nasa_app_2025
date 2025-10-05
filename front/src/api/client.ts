@@ -2,7 +2,7 @@ import ky from "ky";
 
 export const apiClient = ky.create({
   prefixUrl: import.meta.env.VITE_API_URL,
-  timeout: 1000 * 30,
+  timeout: 1000 * 60 * 2,
   hooks: {
     beforeRequest: [
       (request) => {
