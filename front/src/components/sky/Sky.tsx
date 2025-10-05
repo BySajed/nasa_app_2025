@@ -5,9 +5,9 @@ import { SatelliteDetailsPanel, SatellitesLayer } from "./Satellite";
 import type { SatelliteObject } from "../../api/satellites";
 import { useMemo, useState } from "react";
 import { scalePosition } from "./utils";
-import type { Planet, Star } from "../../api/sky";
 import { useCamera } from "./useCamera";
 import { Planets } from "./Planet";
+import type { Planet, Star } from "../../api/stars";
 
 export function Sky({
   stars,

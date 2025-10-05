@@ -1,8 +1,8 @@
 import * as THREE from "three";
 import { type ThreeElements } from "@react-three/fiber";
-import type { Star } from "../../api/sky";
 import { useState } from "react";
 import { scalePosition, sizeFromMagnitude } from "./utils";
+import type { Star } from "../../api/stars";
 
 export function Stars({ stars }: { stars: Star[] }) {
   const [selectedStar, setSelectedStar] = useState<Star | null>(null);

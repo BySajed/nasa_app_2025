@@ -1,4 +1,4 @@
-import type { Planet } from "../../api/sky";
+import type { Planet } from "../../api/stars";
 import { StarRender } from "./Star";
 import { scalePosition, sizeFromMagnitude } from "./utils";
 import { useMemo } from "react";
