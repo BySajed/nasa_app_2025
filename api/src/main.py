@@ -3,11 +3,11 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.middleware.cors import CORSMiddleware
-from .routers import sky, objects, weather, moon, auth
+from .routers import sky, objects, weather, moon, auth, spots
 from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
 from .dependencies.settings import settings
 from .services.database import init_db
-from .services.database import init_db
+from dotenv import load_dotenv
 
 load_dotenv()
 
@@ -15,7 +15,6 @@ logger = logging.getLogger("api")
 logging.basicConfig(level=logging.INFO)
 
 scheduler = AsyncIOScheduler()
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
