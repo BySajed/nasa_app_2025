@@ -21,4 +21,5 @@ export type Star = {
   z: number;
   earth_distance_ly: number | null;
   color: string
+  constellation: string | null
 };

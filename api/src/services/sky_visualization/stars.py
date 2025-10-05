@@ -84,8 +84,7 @@ class Star:
         temp_kelvin: float | None ,
     ):
         self.source_id = source_id
-        self.ra = ra
-        self.dec = dec
+        self.coords = SkyCoord(ra=ra * u.deg, dec=dec * u.deg, frame="icrs")
         self.magnitude = magnitude
         self.parallax = parallax  # in milliarcseconds
         self.radius = radius  # in solar radii
@@ -104,13 +103,13 @@ class Star:
             "z": enu_coords[2],
             "earth_distance_ly": self.earth_dist_light_years,
             "color": self.kelvin_to_hex(self.temp_kelvin) if self.temp_kelvin else "#ffffff",
+            "constellation": self.constellation,
         }
 
     def to_ENU(
         self, location: EarthLocation, time: astropy.time.Time
     ) -> tuple[float, float, float]:
-        star_coord = SkyCoord(ra=self.ra * u.deg, dec=self.dec * u.deg, frame="icrs")
-        altaz = star_coord.transform_to(AltAz(obstime=time, location=location))
+        altaz = self.coords.transform_to(AltAz(obstime=time, location=location))
         return alt_az_to_enu(altaz.alt.deg, altaz.az.deg, Star.DISTANCE_FROM_EARTH)
 
     @property
@@ -124,6 +123,13 @@ class Star:
             if self.earth_dist_pc
             else None
         )
+
+    @property
+    def constellation(self) -> Optional[str]:
+        try:
+            return self.coords.get_constellation()
+        except Exception:
+            return None
 
     @staticmethod
     def kelvin_to_rgb(temp_kelvin):
