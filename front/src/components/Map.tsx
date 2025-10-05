@@ -22,7 +22,7 @@ const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 const WEATHER_API_BASE = import.meta.env.VITE_API_URL as string | undefined;
 
 async function getSpots(): Promise<SpotRead[]> {
-    const res = await apiClient.get<SpotRead[]>("spots").json();
+  const res = await apiClient.get<SpotRead[]>("spots").json();
     return res;
 }
 
