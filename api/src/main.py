@@ -7,11 +7,15 @@ from .routers import sky, objects, weather, moon, auth
 from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
 from .dependencies.settings import settings
 from .services.database import init_db
+from .services.database import init_db
+
+load_dotenv()
 
 logger = logging.getLogger("api")
 logging.basicConfig(level=logging.INFO)
 
 scheduler = AsyncIOScheduler()
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -30,8 +34,6 @@ async def lifespan(app: FastAPI):
     try:
         init_db()
         logger.info("Database initialized.")
-        init_db()
-        logger.info("Database initialized.")
         yield
     finally:
         # Shutdown logic
@@ -40,16 +42,13 @@ async def lifespan(app: FastAPI):
             logger.info("Scheduler shut down.")
     yield
 
+
 app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
 
 origins = ["http://localhost:5174", "https://expedition25.dixen.fr"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
@@ -62,11 +61,13 @@ def read_root():
     return {"Hello": "World"}
 
 
-app.include_router(weather_router)
-app.include_router(sky_router)
-app.include_router(moon_router)
-app.include_router(auth_router)
-app.include_router(spots_router)
+app.include_router(weather.router)
+app.include_router(moon.router)
+app.include_router(sky.router)
+app.include_router(auth.router)
+app.include_router(objects.router)
+app.include_router(spots.router)
+
 
 @app.get("/health")
 async def health():
