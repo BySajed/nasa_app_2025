@@ -55,6 +55,10 @@ export function Sky({stars, satellites, planets, observer,}: {
 
     return (
         <div className="w-screen h-screen relative">
+            button to go the /
+            <a href={"/"} className="absolute top-4 left-4 z-10 bg-black/50 text-white px-3 py-1 rounded hover:bg-black/70">
+                Back Home
+            </a>
             <Canvas
                 {...canvasProps}
                 shadows
