@@ -1,32 +1,54 @@
 import * as THREE from "three";
-import {
-  Canvas,
-  useFrame,
-  useThree,
-  type ThreeElements,
-} from "@react-three/fiber";
-import { useState } from "react";
+import { Canvas, useFrame, useThree, type ThreeElements } from "@react-three/fiber";
+import { useMemo, useState } from "react";
 import {
   baseRotation,
   FOV_ANGLE,
   updateCameraRotation,
   useDrag,
 } from "./useDrag";
-import type { Star } from "../../api/sky";
+import type { Star } from "../../api/stars";
+import type { SatelliteObject } from "../../api/satellites";
+import { SatelliteDetailsPanel, SatellitesLayer } from "./Satellite";
 
-export function Sky({ stars }: { stars: Star[] }) {
+export function Sky({
+  stars,
+  satellites,
+  observer,
+}: {
+  stars: Star[];
+  satellites: SatelliteObject[];
+  observer?: { lat: number; lon: number; alt_m?: number } | null;
+}) {
   const [rotation, setRotation] = useState(baseRotation);
 
-  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+  const [selectedStar] = useState<Star | null>(null);
+  const [selectedSatellite, setSelectedSatellite] = useState<
+    SatelliteObject | null
+  >(null);
   const selectedConstellation = selectedStar?.constellation ?? null;
+
+  const skySphereRadius = useMemo(() => {
+    const sample = stars.find((star) => !!star);
+    if (!sample) {
+      return 400;
+    }
+    const [sx, sy, sz] = scaleStarPosition([sample.x, sample.y, sample.z]);
+    return Math.sqrt(sx * sx + sy * sy + sz * sz) || 400;
+  }, [stars]);
+
   function onDrag(dx: number, dy: number) {
     setRotation((prev) => updateCameraRotation(prev, dx, dy));
   }
 
   const canvasProps = useDrag(onDrag);
 
+  function handleSelectSatellite(sat: SatelliteObject) {
+    setSelectedSatellite(sat);
+  }
+
   return (
-    <div className="w-screen h-screen">
+    <div className="w-screen h-screen relative">
       <Canvas
         {...canvasProps}
         scene={{
@@ -42,19 +64,29 @@ export function Sky({ stars }: { stars: Star[] }) {
         <CameraController rotation={rotation} />
         <ambientLight />
         {stars.map((star, i) => (
-          <Star
-            key={i}
-            position={scalePosition([star.x, star.y, star.z])}
-            onClick={() => {
-              setSelectedStar(star);
-            }}
+          <StarMesh
+            key={"star-" + i}
+            position={scaleStarPosition([star.x, star.y, star.z])}
             size={sizeFromMagnitude(star.magnitude)}
             color={star.color}
             constellation={star.constellation ?? null}
             selectedConstellation={selectedConstellation}
           />
         ))}
+        <SatellitesLayer
+          satellites={satellites}
+          displayRadius={skySphereRadius}
+          onSelect={handleSelectSatellite}
+        />
       </Canvas>
+
+      {selectedSatellite && observer && (
+        <SatelliteDetailsPanel
+          satellite={selectedSatellite}
+          observer={observer}
+          onClose={() => setSelectedSatellite(null)}
+        />
+      )}
     </div>
   );
 }
@@ -71,7 +103,7 @@ function CameraController({
   return null;
 }
 
-function Star({
+function StarMesh({
   size,
   color,
   constellation,
@@ -115,7 +147,7 @@ function Star({
   );
 }
 
-function scalePosition([x, y, z]: [number, number, number]): [
+function scaleStarPosition([x, y, z]: [number, number, number]): [
   number,
   number,
   number
