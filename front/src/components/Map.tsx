@@ -1,5 +1,6 @@
-import React, {useEffect, useRef} from "react";
+import React, {useEffect, useRef, useState} from "react";
 import ReactDOMServer from "react-dom/server";
+import { createRoot } from "react-dom/client";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
 import type {LightIntensity, MapProps, Weather, WeatherApiResponse, WeatherMode,} from "../interfaces/IMap";
@@ -17,7 +18,7 @@ const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 const WEATHER_API_BASE = import.meta.env.VITE_API_URL as string | undefined;
 
 async function getSpots(): Promise<SpotRead[]> {
-  const res = await apiClient.get<SpotRead[]>("spots").json();
+  const res = await apiClient.get<SpotRead[]>("spots/").json();
     return res;
 }
 
@@ -31,6 +32,51 @@ function createMarkerElement(): HTMLElement {
     el.style.backgroundPosition = "center";
     el.style.transform = "translateY(-6px)";
     return el;
+}
+
+function createSpotMarkers(spot: SpotRead, map: mapboxgl.Map): mapboxgl.Marker {
+  const el = document.createElement("div");
+  el.id = "marker";
+
+  const hoverMarker = new mapboxgl.Marker(el)
+    .setLngLat([spot.longitude, spot.latitude])
+    .addTo(map);
+
+  const hoverPopup = new mapboxgl.Popup({
+    offset: 25,
+    closeButton: false,
+    closeOnClick: false,
+    anchor: "bottom",
+    maxWidth: "220px",
+    className: "rounded-2xl popup-anim",
+  }).setDOMContent(
+    document
+      .createRange()
+      .createContextualFragment(
+        ReactDOMServer.renderToStaticMarkup(MarkerHoverCard(spot))
+      )
+  );
+
+  hoverMarker.setPopup(hoverPopup);
+  const hoverEl = hoverMarker.getElement();
+  hoverEl.addEventListener("mouseenter", () => {
+    if (!hoverPopup.isOpen()) hoverMarker.togglePopup();
+  });
+  hoverEl.addEventListener("mouseleave", () => {
+    if (!hoverPopup.isOpen()) return;
+    const elPopup = hoverPopup.getElement();
+    if (elPopup) {
+      elPopup.classList.add("popup-anim-out");
+      setTimeout(() => {
+        if (hoverPopup.isOpen()) hoverMarker.togglePopup();
+        elPopup.classList.remove("popup-anim-out");
+      }, 150);
+    } else {
+      hoverMarker.togglePopup();
+    }
+  });
+
+  return hoverMarker;
 }
 
 function minutesDiff(a: Date, b: Date) {
@@ -84,16 +130,21 @@ function isCameraClose(
     return closePos && closeZoom;
 }
 
-const Map: React.FC<MapProps> = ({selectedCity}) => {
-    const wrapperRef = useRef<HTMLDivElement | null>(null);
-    const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const mapRef = useRef<mapboxgl.Map | null>(null);
-    const markerRef = useRef<mapboxgl.Marker | null>(null);
-    const overlayRef = useRef<HTMLDivElement | null>(null);
-    const weatherModeRef = useRef<WeatherMode>("off");
-    const lightRef = useRef<LightIntensity>("Day");
-    const lastWeatherFetchTimer = useRef<number | null>(null);
-    const styleLoadedRef = useRef<boolean>(false);
+const Map: React.FC<MapProps> = ({
+  selectedCity,
+  externalTarget,
+  onSpotCreated,
+}) => {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const weatherModeRef = useRef<WeatherMode>("off");
+  const lightRef = useRef<LightIntensity>("Day");
+  const lastWeatherFetchTimer = useRef<number | null>(null);
+  const styleLoadedRef = useRef<boolean>(false);
+  const [spotMarkers, setSpotMarkers] = useState<mapboxgl.Marker[]>([]);
 
     const navigateToSky = useNavigateToSky();
     const {addPosition} = usePositionHistory();
@@ -274,52 +325,67 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         });
     }
 
-    function attachMarkerPopup(
-        lng: number,
-        lat: number,
-        address?: string | null
-    ) {
-        if (!markerRef.current) return;
-        const btn = document.createElement("button");
-        btn.className =
-            "btn btn-secondary btn-sm text-white font-semibold px-4 py-2 rounded-md";
-        btn.textContent = "View the sky here";
-        btn.onclick = (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            flyToAndNavigate(lng, lat);
-        };
-        const wrapper = document.createElement("div");
-        wrapper.className = "flex flex-col items-center gap-2";
-        if (address) {
-            const p = document.createElement("p");
-            p.className = "text-neutral font-semibold mb-2 align-center text-md";
-            p.textContent = address;
-            wrapper.appendChild(p);
-        }
-        const buttonWrapper = document.createElement("div");
-        buttonWrapper.className = "w-full flex flex-row items-center gap-2";
-        buttonWrapper.appendChild(btn);
-        wrapper.appendChild(buttonWrapper);
-        markerRef.current
-            .setPopup(
-                new mapboxgl.Popup({
-                    offset: 16,
-                    closeOnClick: false,
-                    focusAfterOpen: false,
-                    anchor: "bottom",
-                    maxWidth: "260px",
-                    className: "rounded-2xl",
-                }).setDOMContent(wrapper)
-            )
-            .togglePopup();
-
-        const createSpotDiv = document.createElement("div");
-        createSpotDiv.innerHTML = ReactDOMServer.renderToString(
-            <CreateSpotButton lng={lng} lat={lat}/>
-        );
-        buttonWrapper.appendChild(createSpotDiv.firstChild as Node);
+  function attachMarkerPopup(
+    lng: number,
+    lat: number,
+    address?: string | null
+  ) {
+    if (!markerRef.current) return;
+    const btn = document.createElement("button");
+    btn.className =
+      "btn btn-secondary btn-sm text-white font-semibold px-4 py-2 rounded-md";
+    btn.textContent = "View the sky here";
+    btn.onclick = (e) => {
+      console.log("btn.onclick", lng, lat);
+      e.preventDefault();
+      e.stopPropagation();
+      flyToAndNavigate(lng, lat);
+    };
+    const wrapper = document.createElement("div");
+    wrapper.className = "flex flex-col items-center gap-2";
+    if (address) {
+      const p = document.createElement("p");
+      p.className = "text-neutral font-semibold mb-2 align-center text-md";
+      p.textContent = address;
+      wrapper.appendChild(p);
     }
+    const buttonWrapper = document.createElement("div");
+    buttonWrapper.className = "w-full flex flex-row items-center gap-2";
+    buttonWrapper.appendChild(btn);
+    wrapper.appendChild(buttonWrapper);
+    markerRef.current
+      .setPopup(
+        new mapboxgl.Popup({
+          offset: 16,
+          closeOnClick: true,
+          focusAfterOpen: true,
+          anchor: "bottom",
+          maxWidth: "260px",
+          className: "rounded-2xl",
+        }).setDOMContent(wrapper)
+      )
+      .togglePopup();
+    const createSpotDiv = document.createElement("div");
+    const reactRoot = createRoot(createSpotDiv);
+    reactRoot.render(
+      <CreateSpotButton
+        onCreated={() => {
+          getSpots().then((spots) => {
+            spots.forEach((spot) => {
+              const marker = createSpotMarkers(spot, mapRef.current!);
+              setSpotMarkers([...spotMarkers, marker]);
+            });
+          });
+          if (onSpotCreated) {
+            onSpotCreated();
+          }
+        }}
+        lng={lng}
+        lat={lat}
+      />
+    );
+    buttonWrapper.appendChild(createSpotDiv);
+  }
 
     function updateOverlay(
         lng: number,
@@ -389,52 +455,13 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         });
         map.addControl(new mapboxgl.NavigationControl());
 
-        getSpots().then((spots) => {
-            spots.forEach((spot: SpotRead) => {
-                const el = document.createElement("div");
-                el.id = "marker";
-
-                const hoverMarker = new mapboxgl.Marker(el)
-                    .setLngLat([spot.longitude, spot.latitude])
-                    .addTo(map);
-
-                const hoverPopup = new mapboxgl.Popup({
-                    offset: 25,
-                    closeButton: false,
-                    closeOnClick: false,
-                    anchor: "bottom",
-                    maxWidth: "220px",
-                    className: "rounded-2xl popup-anim",
-                }).setDOMContent(
-                    document
-                        .createRange()
-                        .createContextualFragment(
-                            ReactDOMServer.renderToStaticMarkup(<MarkerHoverCard {...spot} />
-                            ))
-                );
-
-                hoverMarker.setPopup(hoverPopup);
-                const hoverEl = hoverMarker.getElement();
-                hoverEl.addEventListener("mouseenter", () => {
-                    if (!hoverPopup.isOpen()) hoverMarker.togglePopup();
-                });
-                hoverEl.addEventListener("mouseleave", () => {
-                    if (!hoverPopup.isOpen()) return;
-                    const elPopup = hoverPopup.getElement();
-                    if (elPopup) {
-                        elPopup.classList.add("popup-anim-out");
-                        setTimeout(() => {
-                            if (hoverPopup.isOpen()) hoverMarker.togglePopup();
-                            elPopup.classList.remove("popup-anim-out");
-                        }, 150);
-                    } else {
-                        hoverMarker.togglePopup();
-                    }
-                });
-            });
-        });
-
-        mapRef.current = map;
+    getSpots().then((spots) => {
+      spots.forEach((spot) => {
+        const marker = createSpotMarkers(spot, map);
+        setSpotMarkers([...spotMarkers, marker]);
+      });
+    });
+    mapRef.current = map;
 
         map.on("style.load", () => {
             styleLoadedRef.current = true;
@@ -491,6 +518,13 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
             flyToAndNavigate(lng, lat, 12.5);
         });
     }, [selectedCity]);
+
+  useEffect(() => {
+    if (!externalTarget || !mapRef.current) return;
+    const { lng, lat, zoom } = externalTarget;
+    ensureMarker(lng, lat);
+    flyToAndNavigate(lng, lat, zoom ?? 13.5);
+  }, [externalTarget]);
 
     return (
         <div

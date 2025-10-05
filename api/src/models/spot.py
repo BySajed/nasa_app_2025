@@ -12,7 +12,7 @@ class Spot(SQLModel, table=True):
     latitude: float
     longitude: float
     owner_id: int = Field(foreign_key="user.id")
-    created_at: datetime = Field(default_factory=datetime.now(timezone.utc))
+    created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     owner: Optional["User"] = Relationship(back_populates="spots")
     reviews: List["Review"] = Relationship(back_populates="spot")
 
@@ -35,4 +35,4 @@ class SpotRead(SQLModel):
     owner_id: int
     created_at: datetime
     owner: UserReadInSpot
-    reviews: List[ReviewRead] = []
+    reviews: List[ReviewRead] = Field(default_factory=list)
