@@ -8,7 +8,9 @@ import DialogLogin from "../components/auth/DialogLogin.tsx";
 import { useAuth } from "../contexts/useAuthContext";
 import DialogRegister from "../components/auth/DialogRegister.tsx";
 import { apiClient } from "../api/client";
+import { deleteSpot } from "../api/spots";
 import type { SpotRead } from "../interfaces/ISpotRead";
+import { Trash2Icon } from "lucide-react";
 
 const getSpots = async () => {
   try {
@@ -36,6 +38,15 @@ function Home() {
   function handleClick(lng: number, lat: number) {
     console.log(lng, lat);
     setExternalTarget({ lng, lat, zoom: 13.5 });
+  }
+
+  async function handleDeleteSpot(spotId: number) {
+    try {
+      await deleteSpot(spotId);
+      setSpots((prev) => prev.filter((s) => s.id !== spotId));
+    } catch (e) {
+      console.error(e);
+    }
   }
 
   useEffect(() => {
@@ -147,15 +158,30 @@ function Home() {
             ))}
             {!isLoadingSpots &&
               spots.map((spot) => (
-                <CardHistoryPosition
-                  id={spot.id.toString()}
-                  lat={spot.latitude}
-                  lng={spot.longitude}
-                  timestamp={spot.created_at}
-                  title={`📍 Spot de ${spot.owner.username} #${spot.id}`}
-                  description={`Spot enregistré`}
-                  onClick={() => handleClick(spot.longitude, spot.latitude)}
-                />
+                <div key={spot.id} className="relative group">
+                  <CardHistoryPosition
+                    id={spot.id.toString()}
+                    lat={spot.latitude}
+                    lng={spot.longitude}
+                    timestamp={spot.created_at}
+                    title={`📍 Spot de ${spot.owner.username} #${spot.id}`}
+                    description={`Spot enregistré`}
+                    onClick={() => handleClick(spot.longitude, spot.latitude)}
+                  />
+                  {isAuthenticated && username === spot.owner.username && (
+                    <button
+                      type="button"
+                      className="btn btn-error btn-xs absolute top-2 right-2"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDeleteSpot(spot.id);
+                      }}
+                      aria-label={`Delete spot #${spot.id}`}
+                    >
+                      <Trash2Icon className="w-4 h-4 text-white" />
+                    </button>
+                  )}
+                </div>
               ))}
           </ul>
         </div>
