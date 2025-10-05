@@ -6,10 +6,7 @@ export function SkyPage() {
   const [stars, setStars] = useState<Star[]>([]);
 
   useEffect(() => {
-    getVisibleStars(0, 0).then((stars) => {
-      console.log("stars", stars);
-      return setStars(stars);
-    });
+    getVisibleStars(0, 0).then((stars) => setStars(stars));
   }, []);
 
   if (stars.length === 0) {
