@@ -109,6 +109,7 @@ function Home() {
             ))}
           </ul>
         </div>
+
       </div>
 
       <div className="w-full h-full col-span-2 overflow-hidden p-4">

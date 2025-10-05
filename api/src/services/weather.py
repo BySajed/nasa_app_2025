@@ -2,7 +2,7 @@ import requests
 
 class WeatherService:
     base_url = "https://api.open-meteo.com/v1/forecast"
-    query_params = "?current=temperature_2m,rain,is_day,relative_humidity_2m,precipitation,cloud_cover,snowfall,showers"
+    query_params = "?current=temperature_2m,rain,is_day,relative_humidity_2m,precipitation,cloud_cover,snowfall,showers&daily=sunrise,sunset&current=is_day&timezone=auto"
 
     @staticmethod
     def get_url(latitude: float, longitude: float) -> str:

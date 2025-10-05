@@ -32,6 +32,7 @@ function CameraController({
   zoom: number;
 }) {
   const { camera } = useThree();
+  console.log("Camera zoom:", camera.zoom);
   useFrame(() => {
     camera.rotation.set(...rotation);
     camera.zoom = zoom;
