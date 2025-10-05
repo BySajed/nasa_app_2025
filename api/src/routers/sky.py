@@ -47,7 +47,7 @@ def get_stars(lat: float, lon: float, height: float = 0, time: Optional[str] = N
     if time:
         time = datetime.fromisoformat(time)
     else:
-        time = datetime.now()
+        time = None
 
     stars = get_visible_stars(lat, lon, height, time)
     return {"stars": stars}

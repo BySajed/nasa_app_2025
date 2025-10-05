@@ -6,7 +6,12 @@ import {
   type ThreeElements,
 } from "@react-three/fiber";
 import { useState } from "react";
-import { baseRotation, updateCameraRotation, useDrag } from "./useDrag";
+import {
+  baseRotation,
+  FOV_ANGLE,
+  updateCameraRotation,
+  useDrag,
+} from "./useDrag";
 import type { Star } from "../../api/sky";
 
 export function Sky({ stars }: { stars: Star[] }) {
@@ -24,6 +29,7 @@ export function Sky({ stars }: { stars: Star[] }) {
           background: new THREE.Color(0x000000),
         }}
         camera={{
+          fov: FOV_ANGLE,
           isPerspectiveCamera: true,
           rotation,
           position: [0, 0, 0],
@@ -77,6 +83,5 @@ function scalePosition([x, y, z]: [number, number, number]): [
 }
 
 function sizeFromMagnitude(magnitude: number): number {
-  const lighting = Math.pow(2.512, -magnitude) * 20;
-  return lighting
+  return Math.pow(2.512, -magnitude) * 20;
 }

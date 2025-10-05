@@ -5,19 +5,17 @@ from astropy.coordinates import SkyCoord
 from astroquery.gaia import Gaia
 from astropy.coordinates.builtin_frames.altaz import AltAz
 from astropy.coordinates.earth import EarthLocation
-from functools import lru_cache
 from datetime import datetime
 import json
 from src.services.sky_visualization.coordinates import alt_az_to_enu
-from typing import Any
+from typing import  Optional
+from cachetools import cached, TTLCache
 
 
-@lru_cache(maxsize=8)
-def get_visible_stars(
-    lat: float, lon: float, height: float = 0, time: datetime = datetime.now()
-) -> astropy.table.Table:
+@cached(cache=TTLCache(maxsize=8, ttl=300))
+def get_visible_stars(lat: float, lon: float, height: float=0, time: Optional[datetime]=None) -> astropy.table.Table:
     location = _location_from_lat_lon(lat, lon, height)
-    time = astropy.time.Time(time)
+    time = astropy.time.Time(time or datetime.utcnow())
     result = _get_stars_visible_from_location(location, time)
     stars = [_map_row_to_star(row) for row in result]
     return [star.to_visualizable_dict(location, time) for star in stars]
