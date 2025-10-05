@@ -2,7 +2,7 @@ import { apiClient } from "../../api/client";
 
 const postSpot = async (lng: number, lat: number, onCreated: () => void) => {
   try {
-  const response = await apiClient.post("spots", {
+    const response = await apiClient.post("spots", {
       json: { latitude: lat, longitude: lng },
     });
     onCreated();
@@ -12,7 +12,15 @@ const postSpot = async (lng: number, lat: number, onCreated: () => void) => {
   }
 };
 
-const CreateSpotButton = ({ lng, lat, onCreated }: { lng: number; lat: number; onCreated: () => void }) => {
+const CreateSpotButton = ({
+  lng,
+  lat,
+  onCreated,
+}: {
+  lng: number;
+  lat: number;
+  onCreated: () => void;
+}) => {
   return (
     <button
       className="btn btn-soft btn-sm"

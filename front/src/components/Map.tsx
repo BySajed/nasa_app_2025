@@ -130,16 +130,20 @@ function isCameraClose(
     return closePos && closeZoom;
 }
 
-const Map: React.FC<MapProps> = ({selectedCity, externalTarget}) => {
-    const wrapperRef = useRef<HTMLDivElement | null>(null);
-    const mapContainerRef = useRef<HTMLDivElement | null>(null);
-    const mapRef = useRef<mapboxgl.Map | null>(null);
-    const markerRef = useRef<mapboxgl.Marker | null>(null);
-    const overlayRef = useRef<HTMLDivElement | null>(null);
-    const weatherModeRef = useRef<WeatherMode>("off");
-    const lightRef = useRef<LightIntensity>("Day");
-    const lastWeatherFetchTimer = useRef<number | null>(null);
-    const styleLoadedRef = useRef<boolean>(false);
+const Map: React.FC<MapProps> = ({
+  selectedCity,
+  externalTarget,
+  onSpotCreated,
+}) => {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<mapboxgl.Map | null>(null);
+  const markerRef = useRef<mapboxgl.Marker | null>(null);
+  const overlayRef = useRef<HTMLDivElement | null>(null);
+  const weatherModeRef = useRef<WeatherMode>("off");
+  const lightRef = useRef<LightIntensity>("Day");
+  const lastWeatherFetchTimer = useRef<number | null>(null);
+  const styleLoadedRef = useRef<boolean>(false);
   const [spotMarkers, setSpotMarkers] = useState<mapboxgl.Marker[]>([]);
 
     const navigateToSky = useNavigateToSky();
@@ -372,6 +376,9 @@ const Map: React.FC<MapProps> = ({selectedCity, externalTarget}) => {
               setSpotMarkers([...spotMarkers, marker]);
             });
           });
+          if (onSpotCreated) {
+            onSpotCreated();
+          }
         }}
         lng={lng}
         lat={lat}

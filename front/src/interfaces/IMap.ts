@@ -6,6 +6,7 @@ export interface SearchBarProps {
 export interface MapProps {
   selectedCity: string | null;
   externalTarget?: { lng: number; lat: number; zoom?: number } | null;
+  onSpotCreated?: () => void;
 }
 
 export type Weather = "off" | "rain" | "snow";

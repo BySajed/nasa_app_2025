@@ -43,6 +43,7 @@ function Home() {
     try {
       await apiClient.delete(`spots/${spotId}`);
       setSpots((prev) => prev.filter((s) => s.id !== spotId));
+      window.location.reload();
     } catch (e) {
       console.error(e);
     }
@@ -187,7 +188,13 @@ function Home() {
       </div>
 
       <div className="w-full h-full col-span-2 overflow-hidden p-4">
-        <Map selectedCity={selectedVille} externalTarget={externalTarget} />
+        <Map
+          selectedCity={selectedVille}
+          externalTarget={externalTarget}
+          onSpotCreated={() => {
+            getSpots().then((newSpots) => setSpots(newSpots));
+          }}
+        />
       </div>
       <DialogLogin />
       <DialogRegister />
