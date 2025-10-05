@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.middleware.cors import CORSMiddleware
 from .routers import sky, objects, weather, moon, auth, spots
