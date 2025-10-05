@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 from fastapi import FastAPI
+from fastapi.middleware.httpsredirect import HTTPSRedirectMiddleware
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.middleware.cors import CORSMiddleware
 from .routers import sky, objects, weather, moon, auth, spots
@@ -44,6 +45,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
 
+app.add_middleware(HTTPSRedirectMiddleware)
 origins = ["http://localhost:5173", "https://skyexplorer.dixen.fr"]
 
 app.add_middleware(
