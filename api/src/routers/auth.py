@@ -6,10 +6,9 @@ from src.schemas.user_login import UserLogin
 from src.models.user import User
 from sqlmodel import Session, select
 
+router = APIRouter(prefix="/auth")
 
-auth_router = APIRouter(prefix="/auth")
-
-@auth_router.post("/signup")
+@router.post("/signup")
 def signup(user: UserCreate, session: Session = Depends(get_session)):
     existing = session.exec(select(User).where(User.username == user.username)).first()
     if existing:
@@ -21,8 +20,7 @@ def signup(user: UserCreate, session: Session = Depends(get_session)):
     session.refresh(new_user)
     return {"message": "User created"}
 
-
-@auth_router.post("/login")
+@router.post("/login")
 def login(user: UserLogin, session: Session = Depends(get_session)):
     db_user = session.exec(select(User).where(User.username == user.username)).first()
     if not db_user or not verify_password(user.password, db_user.hashed_password):
