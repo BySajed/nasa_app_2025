@@ -45,7 +45,6 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
 
-app.add_middleware(HTTPSRedirectMiddleware)
 origins = ["http://localhost:5173", "https://skyexplorer.dixen.fr"]
 
 app.add_middleware(
