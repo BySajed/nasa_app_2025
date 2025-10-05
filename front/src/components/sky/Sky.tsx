@@ -1,26 +1,29 @@
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { Stars } from "./Star";
-import { useCamera } from "./useCamera";
 import { SatelliteDetailsPanel, SatellitesLayer } from "./Satellite";
-import type { Star } from "../../api/stars";
 import type { SatelliteObject } from "../../api/satellites";
 import { useMemo, useState } from "react";
 import { scalePosition } from "./utils";
+import type { Planet, Star } from "../../api/sky";
+import { useCamera } from "./useCamera";
+import { Planets } from "./Planet";
 
 export function Sky({
   stars,
   satellites,
-  observer }: {
-    stars: Star[],
-    satellites: SatelliteObject[];
-    observer?: { lat: number; lon: number; alt_m?: number } | null;
-  }) {
+  planets,
+  observer,
+}: {
+  stars: Star[];
+  satellites: SatelliteObject[];
+  planets: Planet[];
+  observer?: { lat: number; lon: number; alt_m?: number } | null;
+}) {
   const { canvasProps, cameraProps, rotation, zoom } = useCamera();
 
-  const [selectedSatellite, setSelectedSatellite] = useState<
-    SatelliteObject | null
-  >(null);
+  const [selectedSatellite, setSelectedSatellite] =
+    useState<SatelliteObject | null>(null);
 
   const skySphereRadius = useMemo(() => {
     const sample = stars.find((star) => !!star);
@@ -52,6 +55,7 @@ export function Sky({
           displayRadius={skySphereRadius}
           onSelect={handleSelectSatellite}
         />
+        <Planets planets={planets} />
       </Canvas>
 
       {selectedSatellite && observer && (

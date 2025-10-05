@@ -10,3 +10,7 @@ export function scalePosition([x, y, z]: [number, number, number]): Vector3 {
 export function scaleSize(size: number): number {
   return size / SHRINK_FACTOR;
 }
+
+export function sizeFromMagnitude(magnitude: number): number {
+  return Math.pow(2.512, -magnitude) * 20;
+}
