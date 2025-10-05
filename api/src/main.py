@@ -5,6 +5,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from starlette.middleware.cors import CORSMiddleware
 from .routers import sky, objects, weather, moon, auth, spots
 from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
+from src.services.sky_visualization.artificial.propagator_sgp4 import warm_sat_cache
 from .dependencies.settings import settings
 from .services.database import init_db
 from dotenv import load_dotenv
@@ -20,6 +21,7 @@ scheduler = AsyncIOScheduler()
 async def lifespan(app: FastAPI):
     # Startup logic
     await ensure_tle_cache()
+    warm_sat_cache()
     # Use a fixed job id to avoid duplicate jobs on auto-reload (e.g. uvicorn --reload)
     scheduler.add_job(
         ensure_tle_cache,
@@ -39,7 +41,6 @@ async def lifespan(app: FastAPI):
         if scheduler.running:
             scheduler.shutdown(wait=False)
             logger.info("Scheduler shut down.")
-    yield
 
 
 app = FastAPI(title="Sky Explorer API (Satellites)", version="0.1.0", lifespan=lifespan)
