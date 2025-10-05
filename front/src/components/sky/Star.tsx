@@ -1,11 +1,15 @@
 import * as THREE from "three";
 import { type ThreeElements } from "@react-three/fiber";
-import { useState } from "react";
 import { scalePosition, sizeFromMagnitude } from "./utils";
 import type { Star } from "../../api/stars";
 
-export function Stars({ stars }: { stars: Star[] }) {
-  const [selectedStar, setSelectedStar] = useState<Star | null>(null);
+type StarsProps = {
+  stars: Star[];
+  selectedStar?: Star | null;
+  onSelect?: (star: Star) => void;
+};
+
+export function Stars({ stars, selectedStar = null, onSelect }: StarsProps) {
   const selectedConstellation = selectedStar?.constellation ?? null;
 
   return stars.map((star, i) => (
@@ -13,7 +17,7 @@ export function Stars({ stars }: { stars: Star[] }) {
       key={i}
       position={scalePosition([star.x, star.y, star.z])}
       onClick={() => {
-        setSelectedStar(star);
+        onSelect?.(star);
       }}
       size={sizeFromMagnitude(star.magnitude)}
       color={star.color}
@@ -22,6 +26,52 @@ export function Stars({ stars }: { stars: Star[] }) {
       }
     />
   ));
+}
+
+type StarDetailsPanelProps = {
+  star: Star;
+  onClose: () => void;
+};
+
+export function StarDetailsPanel({ star, onClose }: StarDetailsPanelProps) {
+  return (
+    <div className="absolute top-4 right-4 w-80 max-h-[80vh] overflow-auto bg-black/80 text-white p-4 rounded shadow-xl border border-white/20 backdrop-blur">
+      <div className="flex justify-between items-start mb-2 gap-2">
+        <h2 className="font-semibold leading-tight">
+          {star.constellation && (
+            <span className="block opacity-60 font-normal">
+              Constellation {star.constellation}
+            </span>
+          )}
+        </h2>
+        <button
+          onClick={onClose}
+          className="text-xs px-2 py-1 bg-white/10 rounded hover:bg-white/20"
+        >
+          Close
+        </button>
+      </div>
+
+      <div className="text-xs space-y-1">
+        <p>
+          Magnitude: <span className="font-medium">{star.magnitude.toFixed(2)}</span>
+        </p>
+        {typeof star.temperature_kelvin === "number" && (
+          <p>
+            Temperature: {Math.round(star.temperature_kelvin)} K
+          </p>
+        )}
+        {typeof star.earth_distance_ly === "number" && (
+          <p>Distance: {star.earth_distance_ly.toFixed(2)} Light-years</p>
+        )}
+        <div className="pt-2 border-t border-white/10 space-y-1">
+          <p className="opacity-70 text-[11px] leading-tight">
+            Cliquez sur un autre élément pour afficher ses informations.
+          </p>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function StarRender({

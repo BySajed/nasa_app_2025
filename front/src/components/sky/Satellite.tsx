@@ -206,6 +206,11 @@ export function SatelliteDetailsPanel({
                         </div>
                     </div>
                 )}
+                <div className="pt-2 border-t border-white/10 space-y-1">
+                    <p className="opacity-70 text-[11px] leading-tight">
+                        Cliquez sur un autre élément pour afficher ses informations.
+                    </p>
+                </div>
             </div>
         </div>
     );

@@ -1,6 +1,6 @@
 import * as THREE from "three";
 import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { Stars } from "./Star";
+import { Stars, StarDetailsPanel } from "./Star";
 import { SatelliteDetailsPanel, SatellitesLayer } from "./Satellite";
 import type { SatelliteObject } from "../../api/satellites";
 import { useMemo, useState } from "react";
@@ -25,6 +25,9 @@ export function Sky({
   const [selectedSatellite, setSelectedSatellite] =
     useState<SatelliteObject | null>(null);
 
+  const [selectedStar, setSelectedStar] =
+    useState<Star | null>(null);
+
   const skySphereRadius = useMemo(() => {
     const sample = stars.find((star) => !!star);
     if (!sample) {
@@ -36,6 +39,12 @@ export function Sky({
 
   function handleSelectSatellite(sat: SatelliteObject) {
     setSelectedSatellite(sat);
+    setSelectedStar(null);
+  }
+
+  function handleSelectStar(star: Star) {
+    setSelectedStar(star);
+    setSelectedSatellite(null);
   }
 
   return (
@@ -49,7 +58,11 @@ export function Sky({
       >
         <CameraController rotation={rotation} zoom={zoom} />
         <ambientLight />
-        <Stars stars={stars} />
+        <Stars
+          stars={stars}
+          selectedStar={selectedStar}
+          onSelect={handleSelectStar}
+        />
         <SatellitesLayer
           satellites={satellites}
           displayRadius={skySphereRadius}
@@ -65,6 +78,13 @@ export function Sky({
           onClose={() => setSelectedSatellite(null)}
         />
       )}
+
+      {selectedStar && (
+        <StarDetailsPanel
+          star={selectedStar}
+          onClose={() => setSelectedStar(null)}
+        />
+      )}
     </div>
   );
 }
@@ -77,7 +97,6 @@ function CameraController({
   zoom: number;
 }) {
   const { camera } = useThree();
-  console.log("Camera zoom:", camera.zoom);
   useFrame(() => {
     camera.rotation.set(...rotation);
     camera.zoom = zoom;
