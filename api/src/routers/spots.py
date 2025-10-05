@@ -8,6 +8,7 @@ from src.models.spot import Spot, SpotRead
 from src.models.review import Review
 from src.models.user import User
 from sqlmodel import Session, select
+from datetime import datetime, timezone
 from sqlalchemy.orm import selectinload
 
 router = APIRouter(prefix="/spots", tags=["spots"])
@@ -20,13 +21,10 @@ def create_spot(
     session: Session = Depends(get_session),
 ):
     new_spot = Spot(
-        name=spot.name,
-        description=spot.description,
-        city=spot.city,
-        country=spot.country,
         latitude=spot.latitude,
         longitude=spot.longitude,
         owner_id=user.id,
+        created_at=datetime.now(timezone.utc),
     )
     session.add(new_spot)
     session.commit()
@@ -36,7 +34,9 @@ def create_spot(
 
 @router.get("/", response_model=List[SpotRead])
 def list_spots(session: Session = Depends(get_session)):
-    spots = session.exec(select(Spot).options(selectinload(Spot.reviews))).all()
+    spots = session.exec(
+        select(Spot).options(selectinload(Spot.reviews), selectinload(Spot.owner))
+    ).all()
     return spots
 
 

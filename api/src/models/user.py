@@ -12,3 +12,8 @@ class User(SQLModel, table=True):
     hashed_password: str
     spots: List["Spot"] = Relationship(back_populates="owner")
     reviews: List["Review"] = Relationship(back_populates="user")
+
+
+class UserPublic(SQLModel):
+    id: int
+    username: str

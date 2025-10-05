@@ -6,8 +6,26 @@ import pinUrl from "../assets/marker.svg";
 import { forwardGeocode, reverseGeocode } from "../lib/geocoding";
 import { useNavigateToSky } from "../hooks/useNavigateToSky.ts";
 import { usePositionHistory } from "../hooks/usePositionHistory.ts";
+import { apiClient } from "../api/client.ts";
+
+interface Spot {
+  id: number;
+  name: string;
+  description: string;
+  city: string;
+  country: string;
+  latitude: number;
+  longitude: number;
+  owner_id: number;
+}
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
+
+async function getSpots(): Promise<Spot[]> {
+  const res = await apiClient.get<Spot[]>("spots").json();
+
+  return res;
+}
 
 function createMarkerElement(): HTMLElement {
   const el = document.createElement("div");
@@ -87,7 +105,7 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     if (!markerRef.current) return;
     const btn = document.createElement("button");
     btn.className =
-      "btn btn-primary text-white font-semibold px-4 py-2 rounded-md";
+      "btn btn-secondary w-full text-white font-semibold px-4 py-2 rounded-md";
     btn.textContent = "Voir le ciel ici";
     btn.onclick = (e) => {
       e.preventDefault();
@@ -131,39 +149,43 @@ const Map: React.FC<MapProps> = ({ selectedCity }) => {
     });
     map.addControl(new mapboxgl.NavigationControl());
 
-    const el = document.createElement("div");
-    el.id = "marker";
+    getSpots().then((spots) => {
+      spots.forEach((spot) => {
+        const el = document.createElement("div");
+        el.id = "marker";
 
-    const hoverMarker = new mapboxgl.Marker(el)
-      .setLngLat([2.287592, 48.862725])
-      .addTo(map);
+        const hoverMarker = new mapboxgl.Marker(el)
+          .setLngLat([spot.longitude, spot.latitude])
+          .addTo(map);
 
-    const hoverPopup = new mapboxgl.Popup({
-      offset: 16,
-      closeButton: false,
-      closeOnClick: false,
-      anchor: "bottom",
-      maxWidth: "220px",
-      className: "rounded-2xl popup-anim",
-    }).setText("Voir le ciel ici");
+        const hoverPopup = new mapboxgl.Popup({
+          offset: 16,
+          closeButton: false,
+          closeOnClick: false,
+          anchor: "bottom",
+          maxWidth: "220px",
+          className: "rounded-2xl popup-anim",
+        }).setText("Voir le ciel ici");
 
-    hoverMarker.setPopup(hoverPopup);
-    const hoverEl = hoverMarker.getElement();
-    hoverEl.addEventListener("mouseenter", () => {
-      if (!hoverPopup.isOpen()) hoverMarker.togglePopup();
-    });
-    hoverEl.addEventListener("mouseleave", () => {
-      if (!hoverPopup.isOpen()) return;
-      const elPopup = hoverPopup.getElement();
-      if (elPopup) {
-        elPopup.classList.add("popup-anim-out");
-        setTimeout(() => {
-          if (hoverPopup.isOpen()) hoverMarker.togglePopup();
-          elPopup.classList.remove("popup-anim-out");
-        }, 150);
-      } else {
-        hoverMarker.togglePopup();
-      }
+        hoverMarker.setPopup(hoverPopup);
+        const hoverEl = hoverMarker.getElement();
+        hoverEl.addEventListener("mouseenter", () => {
+          if (!hoverPopup.isOpen()) hoverMarker.togglePopup();
+        });
+        hoverEl.addEventListener("mouseleave", () => {
+          if (!hoverPopup.isOpen()) return;
+          const elPopup = hoverPopup.getElement();
+          if (elPopup) {
+            elPopup.classList.add("popup-anim-out");
+            setTimeout(() => {
+              if (hoverPopup.isOpen()) hoverMarker.togglePopup();
+              elPopup.classList.remove("popup-anim-out");
+            }, 150);
+          } else {
+            hoverMarker.togglePopup();
+          }
+        });
+      });
     });
 
     mapRef.current = map;
