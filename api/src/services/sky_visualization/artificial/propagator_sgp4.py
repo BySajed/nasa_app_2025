@@ -7,12 +7,12 @@ from astropy.time import Time
 from astropy.coordinates import SkyCoord, AltAz, EarthLocation
 import astropy.units as u
 from skyfield.framelib import itrs
-from ..coordinates import alt_az_to_enu
+from src.services.sky_visualization.coordinates import alt_az_to_enu
 
 from .tle_cache import get_tle_map
 from .classify import infer_category
-from ...time_utils import iso_z
-from ...visibility import above_horizon
+from src.services.time_utils import iso_z
+from src.services.visibility import above_horizon
 
 _loader = Loader('.skyfield')
 ts = _loader.timescale()

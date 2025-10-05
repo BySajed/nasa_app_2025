@@ -3,10 +3,10 @@ from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Query
 
-from ..decorators.timing import timed
+from src.decorators.timing import timed
 from src.services.sky_visualization.artificial.tle_cache import ensure_tle_cache
 from src.services.sky_visualization.artificial.propagator_sgp4 import compute_details
-from ..models.responses import DetailsResponse
+from src.models.responses import DetailsResponse
 
 router = APIRouter(prefix="/objects", tags=["objects"])
 
