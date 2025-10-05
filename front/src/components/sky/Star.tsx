@@ -66,7 +66,7 @@ export function StarDetailsPanel({ star, onClose }: StarDetailsPanelProps) {
         )}
         <div className="pt-2 border-t border-white/10 space-y-1">
           <p className="opacity-70 text-[11px] leading-tight">
-            Cliquez sur un autre élément pour afficher ses informations.
+            Click on another item to display its information.
           </p>
         </div>
       </div>

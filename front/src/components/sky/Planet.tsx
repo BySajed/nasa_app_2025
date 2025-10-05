@@ -165,6 +165,11 @@ export function PlanetDetailsPanel({
             </span>
           </p>
         </div>
+        <div className="pt-2 border-t border-white/10 space-y-1">
+          <p className="opacity-70 text-[11px] leading-tight">
+            Click on another item to display its information.
+          </p>
+        </div>
       </div>
     </div>
   );
