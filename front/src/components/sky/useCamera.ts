@@ -9,8 +9,8 @@ export function useCamera() {
       updateCameraRotation({ previousRotation, dx, dy, zoom })
     );
   }
-  function onZoom(delta: number) {
-    setZoom((prev) => updateZoom(prev, delta));
+  function onWheel(event: React.WheelEvent) {
+    setZoom((prev) => updateZoom(prev, event.deltaY));
     setRotation((previousRotation) =>
       updateCameraRotation({ previousRotation, dx: 0, dy: 0, zoom })
     );
@@ -18,9 +18,7 @@ export function useCamera() {
 
   const canvasProps = {
     ...useDrag(onDrag),
-    onWheel: (event: React.WheelEvent) => {
-      onZoom(event.deltaY);
-    },
+    onWheel,
   };
 
   const cameraProps = {
