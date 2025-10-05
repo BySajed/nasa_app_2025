@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useDrag } from "./useDrag";
 
 export function useCamera() {
@@ -9,16 +9,26 @@ export function useCamera() {
       updateCameraRotation({ previousRotation, dx, dy, zoom })
     );
   }
-  function onWheel(event: React.WheelEvent) {
-    setZoom((prev) => updateZoom(prev, event.deltaY));
-    setRotation((previousRotation) =>
-      updateCameraRotation({ previousRotation, dx: 0, dy: 0, zoom })
+
+  useEffect(() => {
+    document.addEventListener(
+      "wheel",
+      (event) => {
+        if (!(event instanceof WheelEvent)) {
+          return;
+        }
+        event.preventDefault();
+        setZoom((prev) => updateZoom(prev, event.deltaY));
+        setRotation((previousRotation) =>
+          updateCameraRotation({ previousRotation, dx: 0, dy: 0, zoom })
+        );
+      },
+      { passive: false }
     );
-  }
+  }, []);
 
   const canvasProps = {
     ...useDrag(onDrag),
-    onWheel,
   };
 
   const cameraProps = {
