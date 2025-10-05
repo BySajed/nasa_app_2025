@@ -38,6 +38,8 @@ class Settings(BaseSettings):
     TLE_FETCH_RETRIES: int = 3
     TLE_FETCH_BACKOFF_SECONDS: float = 1.5
 
+    RAPIDAPI_KEY: str = ""
+
     class Config:
         env_file = ".env"
 
