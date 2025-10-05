@@ -46,4 +46,5 @@ export type Planet = {
   z: number;
   magnitude: number;
   is_visible: boolean;
+  distance_km: number;
 }

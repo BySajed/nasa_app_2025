@@ -11,7 +11,11 @@ type PlanetsProps = {
   onSelect?: (planet: Planet) => void;
 };
 
-export function Planets({ planets, selectedPlanet = null, onSelect }: PlanetsProps) {
+export function Planets({
+  planets,
+  selectedPlanet = null,
+  onSelect,
+}: PlanetsProps) {
   return (
     <>
       {planets.map((planet) => (
@@ -50,7 +54,8 @@ function PlanetRender({ planet, isSelected, onSelect }: PlanetRenderProps) {
 
     // Simple seeded pseudo-random
     let seed = 0;
-    for (let i = 0; i < planet.name.length; i++) seed = (seed * 31 + planet.name.charCodeAt(i)) | 0;
+    for (let i = 0; i < planet.name.length; i++)
+      seed = (seed * 31 + planet.name.charCodeAt(i)) | 0;
     function rand() {
       seed = (seed * 1664525 + 1013904223) | 0;
       return ((seed >>> 0) % 1000) / 1000;
@@ -66,8 +71,11 @@ function PlanetRender({ planet, isSelected, onSelect }: PlanetRenderProps) {
       const bandCount = 6 + Math.floor(rand() * 6);
       for (let b = 0; b < bandCount; b++) {
         const y = (b / bandCount) * size;
-        const bandHeight = size / bandCount * (0.6 + rand() * 1.2);
-        ctx.fillStyle = mixColor(baseColor, shadeHex(baseColor, (rand() - 0.5) * 0.2));
+        const bandHeight = (size / bandCount) * (0.6 + rand() * 1.2);
+        ctx.fillStyle = mixColor(
+          baseColor,
+          shadeHex(baseColor, (rand() - 0.5) * 0.2)
+        );
         ctx.globalAlpha = 0.8 - rand() * 0.5;
         ctx.fillRect(0, y, size, bandHeight);
       }
@@ -79,7 +87,10 @@ function PlanetRender({ planet, isSelected, onSelect }: PlanetRenderProps) {
         const y = Math.floor(rand() * size);
         const r = 1 + Math.floor(rand() * (size * 0.02));
         ctx.beginPath();
-        ctx.fillStyle = mixColor(baseColor, shadeHex(baseColor, (rand() - 0.5) * 0.3));
+        ctx.fillStyle = mixColor(
+          baseColor,
+          shadeHex(baseColor, (rand() - 0.5) * 0.3)
+        );
         ctx.globalAlpha = 0.6 - rand() * 0.5;
         ctx.arc(x, y, r, 0, Math.PI * 2);
         ctx.fill();
@@ -91,7 +102,15 @@ function PlanetRender({ planet, isSelected, onSelect }: PlanetRenderProps) {
     ctx.fillStyle = "#ffffff";
     for (let i = 0; i < 6; i++) {
       ctx.beginPath();
-      ctx.ellipse(rand() * size, rand() * size, size * 0.6 * rand(), size * 0.2 * rand(), rand() * Math.PI, 0, Math.PI * 2);
+      ctx.ellipse(
+        rand() * size,
+        rand() * size,
+        size * 0.6 * rand(),
+        size * 0.2 * rand(),
+        rand() * Math.PI,
+        0,
+        Math.PI * 2
+      );
       ctx.fill();
     }
 
@@ -117,13 +136,14 @@ type PlanetDetailsPanelProps = {
   onClose: () => void;
 };
 
-export function PlanetDetailsPanel({ planet, onClose }: PlanetDetailsPanelProps) {
+export function PlanetDetailsPanel({
+  planet,
+  onClose,
+}: PlanetDetailsPanelProps) {
   return (
     <div className="absolute top-4 right-4 w-80 max-h-[80vh] overflow-auto bg-black/80 text-white p-4 rounded shadow-xl border border-white/20 backdrop-blur">
       <div className="flex justify-between items-start mb-2 gap-2">
-        <h2 className="font-semibold text-sm leading-tight">
-          {planet.name}
-        </h2>
+        <h2 className="font-semibold text-sm leading-tight">{planet.name}</h2>
         <button
           onClick={onClose}
           className="text-xs px-2 py-1 bg-white/10 rounded hover:bg-white/20"
@@ -134,14 +154,15 @@ export function PlanetDetailsPanel({ planet, onClose }: PlanetDetailsPanelProps)
 
       <div className="text-xs space-y-1">
         <p>
-          Magnitude: <span className="font-medium">{planet.magnitude.toFixed(2)}</span>
+          Magnitude:{" "}
+          <span className="font-medium">{planet.magnitude.toFixed(2)}</span>
         </p>
         <div className="pt-2 border-t border-white/10 space-y-1">
           <p className="opacity-70 text-[11px] leading-tight">
-            Position (ENU km):
-          </p>
-          <p className="font-mono text-[11px] opacity-80">
-            x: {planet.x.toFixed(1)} · y: {planet.y.toFixed(1)} · z: {planet.z.toFixed(1)}
+            Distance:{" "}
+            <span className="font-medium">
+              {Intl.NumberFormat("en-US").format(planet.distance_km)} km
+            </span>
           </p>
         </div>
       </div>
@@ -183,7 +204,10 @@ function hexToRgb(hex: string) {
 
 function rgbToHex(r: number, g: number, b: number) {
   return (
-    "#" + ((1 << 24) + (Math.round(r) << 16) + (Math.round(g) << 8) + Math.round(b)).toString(16).slice(1)
+    "#" +
+    ((1 << 24) + (Math.round(r) << 16) + (Math.round(g) << 8) + Math.round(b))
+      .toString(16)
+      .slice(1)
   );
 }
 
@@ -195,5 +219,9 @@ function shadeHex(hex: string, amount: number) {
 function mixColor(a: string, b: string, t = 0.5) {
   const A = hexToRgb(a);
   const B = hexToRgb(b);
-  return rgbToHex(A.r * (1 - t) + B.r * t, A.g * (1 - t) + B.g * t, A.b * (1 - t) + B.b * t);
+  return rgbToHex(
+    A.r * (1 - t) + B.r * t,
+    A.g * (1 - t) + B.g * t,
+    A.b * (1 - t) + B.b * t
+  );
 }
