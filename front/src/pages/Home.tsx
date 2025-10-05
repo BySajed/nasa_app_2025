@@ -8,7 +8,6 @@ import DialogLogin from "../components/auth/DialogLogin.tsx";
 import { useAuth } from "../contexts/useAuthContext";
 import DialogRegister from "../components/auth/DialogRegister.tsx";
 import { apiClient } from "../api/client";
-import { deleteSpot } from "../api/spots";
 import type { SpotRead } from "../interfaces/ISpotRead";
 import { Trash2Icon } from "lucide-react";
 
@@ -42,7 +41,7 @@ function Home() {
 
   async function handleDeleteSpot(spotId: number) {
     try {
-      await deleteSpot(spotId);
+      await apiClient.delete(`spots/${spotId}`);
       setSpots((prev) => prev.filter((s) => s.id !== spotId));
     } catch (e) {
       console.error(e);
