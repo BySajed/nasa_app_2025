@@ -2,13 +2,7 @@ import React, {useEffect, useRef} from "react";
 import ReactDOMServer from "react-dom/server";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-import type {
-    LightIntensity,
-    MapProps,
-    Weather,
-    WeatherApiResponse,
-    WeatherMode,
-} from "../interfaces/IMap";
+import type {LightIntensity, MapProps, Weather, WeatherApiResponse, WeatherMode,} from "../interfaces/IMap";
 import pinUrl from "../assets/marker.svg";
 import {forwardGeocode, reverseGeocode} from "../lib/geocoding";
 import {useNavigateToSky} from "../hooks/useNavigateToSky.ts";
@@ -17,6 +11,7 @@ import {apiClient} from "../api/client.ts";
 import MarkerHoverCard from "./spots/MarkerHoverCard.tsx";
 import type {SpotRead} from "../interfaces/ISpotRead";
 import CreateSpotButton from "./spots/CreateSpotButton.tsx";
+import type {KyResponse} from "ky";
 
 const TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN as string | undefined;
 const WEATHER_API_BASE = import.meta.env.VITE_API_URL as string | undefined;
@@ -122,12 +117,11 @@ const Map: React.FC<MapProps> = ({selectedCity}) => {
         lng: number
     ): Promise<WeatherApiResponse | null> {
         if (!WEATHER_API_BASE) return null;
-        const url = `${WEATHER_API_BASE}weather?latitude=${lat}&longitude=${lng}`;
+        const url = `weather/?latitude=${lat}&longitude=${lng}`;
         try {
-            const res = await fetch(url, {headers: {accept: "application/json"}});
+            const res : KyResponse<WeatherApiResponse> = await apiClient.get(url);
             if (!res.ok) throw new Error(`HTTP ${res.status}`);
-            const json = (await res.json()) as WeatherApiResponse;
-            return json;
+            return await res.json();
         } catch (e) {
             console.error("requestForWeather :", e, url);
             return null;
