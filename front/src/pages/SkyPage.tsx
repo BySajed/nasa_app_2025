@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { getVisibleStars, type Star } from "../api/sky";
 import { Sky } from "../components/sky/Sky";
-import nasaLogo from "../assets/NASA_logo.svg?url";
-import { useLocation, useNavigate, useNavigation } from "react-router-dom";
+import nasaLogo from "../assets/NASA_logo.svg";
+import { useLocation } from "react-router-dom";
 
 export function SkyPage() {
   const [stars, setStars] = useState<Star[]>([]);
