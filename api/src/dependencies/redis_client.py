@@ -1,5 +1,5 @@
 import redis
-from .settings import settings
+from src.dependencies.settings import settings
 
 _redis: redis.Redis | None = None
 
