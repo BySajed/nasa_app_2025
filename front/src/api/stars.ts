@@ -22,4 +22,5 @@ export type Star = {
   earth_distance_ly: number | null;
   color: string
   constellation: string | null
+  temperature_kelvin: number | null
 };

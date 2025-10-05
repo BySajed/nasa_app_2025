@@ -10,21 +10,21 @@ from src.services.sky_visualization.coordinates import alt_az_to_enu
 from typing import Any, Dict, List
 
 MAG = {
-    "moon": -12.6,
+    "moon":-12.6,
     "mercury": 0.23,
-    "venus": -4.4,
-    "mars": -1.52,
-    "jupiter": -9.4,
-    "saturn": -8.88,
-    "uranus": -7.19,
-    "neptune": -6.87,
-    "pluto": -1.0,
+    "venus":-4.4,
+    "mars":-1.52,
+    "jupiter":-9.4,
+    "saturn":-8.88,
+    "uranus":-7.19,
+    "neptune":-6.87,
+    "pluto":-1.0,
 }
 
 
 @lru_cache(maxsize=8)
 def get_solar_system_positions(
-    lat: float, lon: float, height: float = 0, time: datetime = None
+    lat: float, lon: float, height: float=0, time: datetime=None
 ) -> List[Dict[str, Any]]:
     if time is None:
         time = datetime.now()
@@ -74,7 +74,7 @@ def _get_planet_position(
 
         magnitude = _calculate_planet_magnitude(body_name, body_coord, time)
 
-        scaled_distance_km = distance_km / 100000
+        scaled_distance_km = 300_000 # Scale distance to fit visualization, arbitrary value
         enu_coords = alt_az_to_enu(altaz.alt.deg, altaz.az.deg, scaled_distance_km)
 
         return {
@@ -129,6 +129,6 @@ def _calculate_magnitude(body_name: str, distance_au: float) -> float:
 
 
 def _location_from_lat_lon(
-    lat: float, lon: float, height_m: float = 0.0
+    lat: float, lon: float, height_m: float=0.0
 ) -> EarthLocation:
     return EarthLocation(lat=lat * u.deg, lon=lon * u.deg, height=height_m * u.m)
