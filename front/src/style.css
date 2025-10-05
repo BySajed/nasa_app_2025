@@ -14,3 +14,18 @@
 mapbox-address-autofill {
     width: 100%;
 }
+
+@keyframes spin-slow-twice {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(720deg); 
+  }
+}
+
+.spin-twice {
+  width: 50%;
+  height: 50%;
+  animation: spin-slow-twice 15s linear infinite;
+}
