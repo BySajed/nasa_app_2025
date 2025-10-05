@@ -6,7 +6,12 @@ import {
   type ThreeElements,
 } from "@react-three/fiber";
 import { useState } from "react";
-import { baseRotation, updateCameraRotation, useDrag } from "./useDrag";
+import {
+  baseRotation,
+  FOV_ANGLE,
+  updateCameraRotation,
+  useDrag,
+} from "./useDrag";
 import type { Star } from "../../api/sky";
 
 export function Sky({ stars }: { stars: Star[] }) {
@@ -16,6 +21,8 @@ export function Sky({ stars }: { stars: Star[] }) {
   }
 
   const canvasProps = useDrag(onDrag);
+
+  console.log(stars.map((s) => s.color + "\n"));
   return (
     <div className="w-screen h-screen">
       <Canvas
@@ -24,6 +31,7 @@ export function Sky({ stars }: { stars: Star[] }) {
           background: new THREE.Color(0x000000),
         }}
         camera={{
+          fov: FOV_ANGLE,
           isPerspectiveCamera: true,
           rotation,
           position: [0, 0, 0],
@@ -31,7 +39,6 @@ export function Sky({ stars }: { stars: Star[] }) {
       >
         <CameraController rotation={rotation} />
         <ambientLight />
-        <pointLight position={[10, 10, 10]} />
         {stars.map((star, i) => (
           <Star
             key={i}
@@ -40,6 +47,7 @@ export function Sky({ stars }: { stars: Star[] }) {
               console.log(star);
             }}
             size={sizeFromMagnitude(star.magnitude)}
+            color={star.color}
           />
         ))}
       </Canvas>
@@ -59,11 +67,11 @@ function CameraController({
   return null;
 }
 
-function Star(props: ThreeElements["mesh"] & { size: number }) {
+function Star(props: ThreeElements["mesh"] & { size: number; color: string }) {
   return (
     <mesh {...props}>
       <sphereGeometry args={[props.size, 32, 32]} />
-      <meshStandardMaterial color={"white"} />
+      <meshStandardMaterial color={props.color} />
     </mesh>
   );
 }
@@ -77,6 +85,5 @@ function scalePosition([x, y, z]: [number, number, number]): [
 }
 
 function sizeFromMagnitude(magnitude: number): number {
-  const lighting = Math.pow(2.512, -magnitude) * 20;
-  return lighting
+  return Math.pow(2.512, -magnitude) * 20;
 }
